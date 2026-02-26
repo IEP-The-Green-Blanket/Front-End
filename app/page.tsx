@@ -3,7 +3,7 @@ export default function Home() {
     <>
       <h2>Welcom to our React App!</h2>
       <p>This is a test page.</p>
-      <button>Test button</button>
+      <p>Test of the self updater works.</p>
     </>
   );
 }
