@@ -1,9 +1,29 @@
+"use client";
+
+import { useState } from "react";
+
 export default function Home() {
+  const [isPressed, setIsPressed] = useState(false);
+
   return (
     <>
-      <h2>Welcom to our React App!</h2>
-      <p>This is a test page.</p>
-      <p>Test of the self updater works.</p>
+      <h2>Welkom bij de interactieve knop!</h2>
+      <p>Houd de knop ingedrukt om hem rood te maken.</p>
+
+      <button
+        onMouseDown={() => setIsPressed(true)}
+        onMouseUp={() => setIsPressed(false)}
+        onMouseLeave={() => setIsPressed(false)}
+        style={{
+          backgroundColor: isPressed ? "red" : "blue",
+          color: "white",
+          padding: "10px 20px",
+          fontSize: "16px",
+          transition: "background-color 0.1s", // Maakt de overgang soepel
+        }}
+      >
+        {isPressed ? "Ik ben rood!" : "Houd mij ingedrukt"}
+      </button>
     </>
   );
 }
