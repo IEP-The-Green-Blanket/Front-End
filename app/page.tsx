@@ -15,14 +15,14 @@ export default function Home() {
         onMouseUp={() => setIsPressed(false)}
         onMouseLeave={() => setIsPressed(false)}
         style={{
-          backgroundColor: isPressed ? "red" : "blue",
+          backgroundColor: isPressed ? "green" : "blue",
           color: "white",
           padding: "10px 20px",
           fontSize: "16px",
           transition: "background-color 0.1s", // Maakt de overgang soepel
         }}
       >
-        {isPressed ? "Ik ben rood!" : "Houd mij ingedrukt"}
+        {isPressed ? "Ik ben green!" : "Houd mij ingedrukt"}
       </button>
     </>
   );
