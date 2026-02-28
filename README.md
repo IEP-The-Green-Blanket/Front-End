@@ -13,3 +13,5 @@ This will be the Front-End repository for our Green Blanket website project.
 >    - Example: `git pull origin dev`
 > 4. **Merge to Dev** - Once conflicts are resolved, merge your branch into `dev` (but usualy there wont be any conflicts if we work correctly)
 > 5. **Release** - At the end of the sprint, we are going to merge `dev` to `main` to deploy it to the server
+
+Dont mess with the deploy-pipline.yml file and the Dockerfile!
