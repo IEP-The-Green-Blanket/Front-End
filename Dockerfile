@@ -1,24 +1,21 @@
-# Gebruik de officiële Node 20 image
-FROM node:20-slim
+FROM node:20-slim AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
 
-# Map instellen in de container
+FROM node:20-slim AS runner
 WORKDIR /app
 
-# Kopieer package bestanden om dependencies te installeren
-COPY package*.json ./
-
-# Installeer dependencies
-RUN npm install
-
-# Kopieer de rest van je applicatie
-COPY . .
-
-# Bouw de applicatie (voor productie-omgevingen)
-# RUN npm run build
-
-# Stel de poort in (Next.js luistert hiernaar via de PORT variabele)
+ENV NODE_ENV=production
 ENV PORT=8080
+
+# kopieer alleen de noodzakelijke 'standalone' bestanden
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+
 EXPOSE 8080
 
-# Start de applicatie
-CMD ["npm", "run", "dev"]
+CMD ["node", "server.js"]

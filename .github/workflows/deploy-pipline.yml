@@ -15,4 +15,4 @@ jobs:
 
       - name: Herstart Docker Container
         run: |
-          sudo /usr/local/bin/deploy --path /home/tripp/ie-Project/Front-End
+          sudo /usr/local/bin/deploy --service frontend
