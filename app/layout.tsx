@@ -1,3 +1,4 @@
+import Header from "@/components/Header";
 import "@/style/globals.css";
 
 export default function RootLayout({
@@ -7,10 +8,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <Header />
       <body>
-        <nav>
-          <h1>Our website</h1>
-        </nav>
         <main>{children}</main>
         <footer>© 2026 Green Blanket</footer>
       </body>
