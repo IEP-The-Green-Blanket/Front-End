@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+footer {
+    font-size: xx-small;
+    text-align: center;
+    color: green;
+}
+
 .site-header {
     background: #fff;
     border-bottom: 1px solid #e5e7eb;
