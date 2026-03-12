@@ -1,0 +1,12 @@
+.statusWindow {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.statusWindow p {
+    max-width: 50%;
+    text-align: center;
+    align-self: center;
+}
+
