@@ -1,1 +1,66 @@
 @import "tailwindcss";
+
+.site-header {
+    background: #fff;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.header-inner {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    min-height: 56px;
+}
+
+.logo-link {
+    display: flex;
+    grid-column: 2;
+    align-items: center;
+}
+
+.logo {
+    max-height: 5.5em;
+    width: auto;
+    display: block;
+}
+
+.navRightSide,
+.navLeftSide{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+    color: green;
+    font-size: large;
+    font-weight: bolder;
+}
+
+.navRightSide a,
+.navLeftSide a { display: block; }
+
+.navLeftSide { grid-column: 1; }
+
+.navRightSide { grid-column: 3; }
+
+.mobile-header  { display: grid; }
+.desktop-header { display: none; }
+
+/* Layout for use on laptop screens below */
+@media (min-width: 700px) {
+    .mobile-header  { display: none; }
+    .desktop-header { display: flex; align-items: center; justify-content: space-between; }
+}
+
+/* Desktop nav group */
+.nav-group {
+    display: flex;
+    flex-direction: row;
+    gap: 1.5rem;
+}
+
+.nav-group .navLeftSide,
+.nav-group .navRightSide {
+    flex-direction: row;
+    gap: 1rem;
+}
