@@ -1,6 +1,7 @@
 "use client";
 
 import StatusDisplay from "@/components/StatusDisplay";
+import style from "@/style/home.module.css";
 
 export default function Home() {
 
@@ -9,8 +10,8 @@ export default function Home() {
       <h1>
         Welcome!
       </h1>
-      <div className="mainPage">
-        <p>The Green Blanket application is designed to inform you about the current status of the dam's water. </p>
+      <div className={style.mainPage}>
+        <p>The Green Blanket application is designed to inform you about the current status of the Hartbeespoortdam's water.</p>
       </div>
       <StatusDisplay status="safe"/>
     </main>
