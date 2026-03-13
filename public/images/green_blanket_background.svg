@@ -1,0 +1,115 @@
+<svg width="100%" viewBox="0 0 680 420" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .bg { fill: #f4faf0; }
+      .hill1 { fill: #d4edcc; }
+      .hill2 { fill: #c2e3b8; }
+      .hill3 { fill: #e8f5e3; }
+      .dot { fill: #b8dba8; }
+      .sparkle { fill: #a8d494; }
+      .leaf { fill: #7bbf5e; }
+      .leaf-dark { fill: #5a9e40; }
+      .petal { fill: #e0f5d8; stroke: #a8d494; stroke-width: 0.8; }
+      .stem { stroke: #7bbf5e; stroke-width: 1.2; fill: none; }
+      .cloud { fill: #eaf6e4; }
+      .star { fill: #c8e8b4; }
+    </style>
+  </defs>
+
+  <!-- Sky/base background -->
+  <rect class="bg" width="680" height="420"/>
+
+  <!-- Soft cloud puffs top area -->
+  <ellipse class="cloud" cx="80" cy="60" rx="55" ry="28"/>
+  <ellipse class="cloud" cx="120" cy="48" rx="45" ry="24"/>
+  <ellipse class="cloud" cx="55" cy="55" rx="35" ry="20"/>
+
+  <ellipse class="cloud" cx="580" cy="50" rx="60" ry="26"/>
+  <ellipse class="cloud" cx="620" cy="40" rx="44" ry="22"/>
+  <ellipse class="cloud" cx="555" cy="58" rx="38" ry="18"/>
+
+  <ellipse class="cloud" cx="330" cy="30" rx="50" ry="20"/>
+  <ellipse class="cloud" cx="360" cy="22" rx="38" ry="16"/>
+  <ellipse class="cloud" cx="305" cy="35" rx="30" ry="15"/>
+
+  <!-- Rolling hills background -->
+  <ellipse class="hill3" cx="340" cy="520" rx="420" ry="210"/>
+  <ellipse class="hill1" cx="100" cy="480" rx="260" ry="160"/>
+  <ellipse class="hill2" cx="590" cy="490" rx="240" ry="150"/>
+
+  <!-- Scattered sparkle stars -->
+  <polygon class="star" points="160,90 163,98 171,98 165,103 167,111 160,106 153,111 155,103 149,98 157,98" transform="scale(0.55) translate(134,74)"/>
+  <polygon class="star" points="160,90 163,98 171,98 165,103 167,111 160,106 153,111 155,103 149,98 157,98" transform="scale(0.4) translate(820,120)"/>
+  <polygon class="star" points="160,90 163,98 171,98 165,103 167,111 160,106 153,111 155,103 149,98 157,98" transform="scale(0.45) translate(480,40)"/>
+  <polygon class="star" points="160,90 163,98 171,98 165,103 167,111 160,106 153,111 155,103 149,98 157,98" transform="scale(0.35) translate(1200,80)"/>
+
+  <!-- Simple 4-point sparkles -->
+  <path class="sparkle" d="M200,75 L202,82 L209,80 L202,88 L200,95 L198,88 L191,80 L198,82 Z"/>
+  <path class="sparkle" d="M460,55 L462,62 L469,60 L462,68 L460,75 L458,68 L451,60 L458,62 Z" opacity="0.7"/>
+  <path class="sparkle" d="M570,100 L572,106 L578,104 L572,110 L570,116 L568,110 L562,104 L568,106 Z" opacity="0.8"/>
+  <path class="sparkle" d="M90,120 L92,126 L98,124 L92,130 L90,136 L88,130 L82,124 L88,126 Z" opacity="0.6"/>
+
+  <!-- Tiny scattered dots pattern -->
+  <circle class="dot" cx="240" cy="110" r="3"/>
+  <circle class="dot" cx="420" cy="95" r="2.5"/>
+  <circle class="dot" cx="510" cy="130" r="3"/>
+  <circle class="dot" cx="155" cy="145" r="2"/>
+  <circle class="dot" cx="350" cy="115" r="2.5"/>
+  <circle class="dot" cx="630" cy="115" r="3"/>
+  <circle class="dot" cx="40" cy="100" r="2"/>
+  <circle class="dot" cx="290" cy="80" r="2"/>
+
+  <!-- Small flower left -->
+  <ellipse class="petal" cx="118" cy="270" rx="7" ry="11" transform="rotate(-30,118,270)"/>
+  <ellipse class="petal" cx="118" cy="270" rx="7" ry="11" transform="rotate(30,118,270)"/>
+  <ellipse class="petal" cx="118" cy="270" rx="7" ry="11" transform="rotate(90,118,270)"/>
+  <ellipse class="petal" cx="118" cy="270" rx="7" ry="11" transform="rotate(150,118,270)"/>
+  <circle style="fill:#c8e8a0;stroke:#8ec870;stroke-width:0.8" cx="118" cy="270" r="6"/>
+  <line class="stem" x1="118" y1="276" x2="116" y2="298"/>
+
+  <!-- Small flower right -->
+  <ellipse class="petal" cx="562" cy="260" rx="7" ry="11" transform="rotate(-30,562,260)"/>
+  <ellipse class="petal" cx="562" cy="260" rx="7" ry="11" transform="rotate(30,562,260)"/>
+  <ellipse class="petal" cx="562" cy="260" rx="7" ry="11" transform="rotate(90,562,260)"/>
+  <ellipse class="petal" cx="562" cy="260" rx="7" ry="11" transform="rotate(150,562,260)"/>
+  <circle style="fill:#c8e8a0;stroke:#8ec870;stroke-width:0.8" cx="562" cy="260" r="6"/>
+  <line class="stem" x1="562" y1="266" x2="560" y2="288"/>
+
+  <!-- Leaf sprigs scattered -->
+  <ellipse class="leaf" cx="180" cy="310" rx="10" ry="6" transform="rotate(-40,180,310)"/>
+  <ellipse class="leaf-dark" cx="190" cy="306" rx="9" ry="5" transform="rotate(-20,190,306)"/>
+
+  <ellipse class="leaf" cx="490" cy="300" rx="10" ry="6" transform="rotate(40,490,300)"/>
+  <ellipse class="leaf-dark" cx="480" cy="296" rx="9" ry="5" transform="rotate(20,480,296)"/>
+
+  <ellipse class="leaf" cx="340" cy="340" rx="10" ry="6" transform="rotate(-15,340,340)"/>
+  <ellipse class="leaf-dark" cx="352" cy="336" rx="9" ry="5" transform="rotate(15,352,336)"/>
+
+  <!-- Bottom grass tufts -->
+  <path class="leaf-dark" d="M40,400 Q44,380 48,400" stroke="#5a9e40" stroke-width="1" fill="none"/>
+  <path class="leaf-dark" d="M50,400 Q54,375 58,400" stroke="#5a9e40" stroke-width="1" fill="none"/>
+  <path class="leaf" d="M45,400 Q50,370 55,400" stroke="#7bbf5e" stroke-width="1" fill="none"/>
+
+  <path class="leaf-dark" d="M610,400 Q614,382 618,400" stroke="#5a9e40" stroke-width="1" fill="none"/>
+  <path class="leaf-dark" d="M620,400 Q624,376 628,400" stroke="#5a9e40" stroke-width="1" fill="none"/>
+  <path class="leaf" d="M615,400 Q620,372 625,400" stroke="#7bbf5e" stroke-width="1" fill="none"/>
+
+  <path class="leaf-dark" d="M320,415 Q324,395 328,415" stroke="#5a9e40" stroke-width="1" fill="none"/>
+  <path class="leaf-dark" d="M330,415 Q334,390 338,415" stroke="#5a9e40" stroke-width="1" fill="none"/>
+
+  <!-- Tiny butterflies -->
+  <g opacity="0.75" transform="translate(260,160) rotate(-10)">
+    <ellipse style="fill:#b8e89a" cx="-6" cy="0" rx="8" ry="5" transform="rotate(20,-6,0)"/>
+    <ellipse style="fill:#b8e89a" cx="6" cy="0" rx="8" ry="5" transform="rotate(-20,6,0)"/>
+    <line style="stroke:#7bbf5e;stroke-width:1" x1="-2" y1="-4" x2="2" y2="4"/>
+  </g>
+  <g opacity="0.65" transform="translate(430,180) rotate(8)">
+    <ellipse style="fill:#c8eeae" cx="-5" cy="0" rx="7" ry="4" transform="rotate(20,-5,0)"/>
+    <ellipse style="fill:#c8eeae" cx="5" cy="0" rx="7" ry="4" transform="rotate(-20,5,0)"/>
+    <line style="stroke:#7bbf5e;stroke-width:1" x1="-2" y1="-3" x2="2" y2="3"/>
+  </g>
+
+  <!-- Soft wavy lines suggesting gentle water/breeze -->
+  <path style="stroke:#c2e3b8;stroke-width:1.2;fill:none;opacity:0.5" d="M0,230 Q85,222 170,230 Q255,238 340,230 Q425,222 510,230 Q595,238 680,230"/>
+  <path style="stroke:#d4edcc;stroke-width:1;fill:none;opacity:0.4" d="M0,250 Q85,244 170,250 Q255,256 340,250 Q425,244 510,250 Q595,256 680,250"/>
+</svg>
