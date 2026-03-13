@@ -15,5 +15,3 @@ This will be the Front-End repository for our Green Blanket website project.
 > 5. **Release** - At the end of the sprint, we are going to merge `dev` to `main` to deploy it to the server
 
 Dont mess with the deploy-pipline.yml file and the Dockerfile!
-
-## Testing if I can push to Dev

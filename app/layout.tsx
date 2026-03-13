@@ -8,10 +8,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <Header />
       <body>
+        <Header />
         <main>{children}</main>
-        <footer>© 2026 Green Blanket</footer>
+        <footer>© 2026 - The Green Blanket -</footer>
       </body>
     </html>
   );
