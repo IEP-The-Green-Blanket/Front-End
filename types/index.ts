@@ -4,3 +4,8 @@ export type weather = {
   temperatureF: number;
   summary: string;
 };
+
+export type StatusMessage = {
+  message: string;
+  type: 'error' | 'success';
+};
