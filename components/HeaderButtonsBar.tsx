@@ -9,7 +9,7 @@ export default function HeaderButtonsBar() {
                         <img 
                             src="/images/hdr_reporting_btn.png" 
                             alt="button reading alert us surrounded by a green frame with a megaphone in the corner."
-                            className="m-2 mt-0 max-h-11" />
+                            className="m-2 mt-0 max-h-11 transition-transform duration-150 active:scale-90" />
                     </Link>
                 </li>
             </ul>
