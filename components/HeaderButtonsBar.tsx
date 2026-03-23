@@ -7,9 +7,9 @@ export default function HeaderButtonsBar() {
                 <li className="flex-1 text-center">
                     <Link href="/reporting">
                         <img 
-                            src="/images/alert_btn.png" 
+                            src="/images/hdr_reporting_btn.png" 
                             alt="button reading alert us surrounded by a green frame with a megaphone in the corner."
-                            className="m-2 max-h-10" />
+                            className="m-2 mt-0 max-h-11" />
                     </Link>
                 </li>
             </ul>
