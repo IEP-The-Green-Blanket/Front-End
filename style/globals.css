@@ -37,8 +37,9 @@ footer {
 }
 
 h1 {
-    font-size: 2.5rem;
+    font-size: 1.8rem;
     text-align: center;
+    color: green;
     padding: 0.5rem; 
 }
 
@@ -119,4 +120,15 @@ h1 {
 .nav-group .navRightSide {
     flex-direction: row;
     gap: 1rem;
+}
+
+.statusSuccess,
+.statusFail{
+    font-size: small;
+    font-weight: bold;
+    color:green;
+}
+
+.statusFail{
+    color: red;
 }
