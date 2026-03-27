@@ -86,7 +86,7 @@ const SmartField: React.FC < {
                         inlineSubmission ?  "opacity-100 bg-[#98ff98] text-black"  : "opacity-0 pointer-events-none"
                     }`}>
                     <p className="text-sm font-bold truncate ">{label}: {value}</p>
-                    <span className="text-xs text-gray-500 ml-auto italic">click to edit</span>
+                    <span className="text-xs text-gray-500 ml-auto italic">tap to edit</span>
                 </div>
             </div>
         </div>
