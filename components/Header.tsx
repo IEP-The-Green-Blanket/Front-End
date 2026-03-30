@@ -9,7 +9,7 @@ export default function Header() {
           <img 
             src="/images/btn_home.png" 
             alt="oval-shaped button reading 'home' with a green frame and a house in the upper right corner."
-            className="max-h-8 transition-transform duration-150 active:scale-90" />
+            className="max-h-8 transition-transform duration-15 active:scale-90" />
         </Link>
         <Link href="/" className="logo-link">
           <img 
@@ -21,25 +21,25 @@ export default function Header() {
           <img 
             src="/images/btn_login.png" 
             alt="oval-shaped button reading 'login' with a greem frame and a person icon in the upper right corner."
-            className="max-h-9 transition-transform duration-150 active:scale-90" />
+            className="max-h-8 transition-transform duration-15 active:scale-90" />
         </Link>
         <Link href="/reporting">
           <img 
             src="/images/btn_alert_us.png" 
             alt="oval-shaped button reading 'alert us' with a green frame and a megaphone in the upper right corner."
-            className="max-h-8 transition-transform duration-150 active:scale-90" />
+            className="max-h-8 transition-transform duration-15 active:scale-90" />
         </Link>
         <Link href="/">
           <img 
             src="/images/btn_analysis.png" 
             alt="oval-shaped button reading 'analysis' with a green frame and a chart in the upper right corner."
-            className="max-h-8 transition-transform duration-150 active:scale-90" />
+            className="max-h-8 transition-transform duration-15 active:scale-90" />
         </Link>
         <Link href="/">
           <img 
             src="/images/btn_contact.png" 
             alt="oval-shaped button reading 'contact' with a green frame and a information icon in the upper right corner."
-            className="max-h-8.5 transition-transform duration-150 active:scale-90" />
+            className="max-h-8 transition-transform duration-15 active:scale-90" />
         </Link>
       </div>
 
