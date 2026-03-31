@@ -56,6 +56,27 @@ h1 {
     align-self: center;
 }
 
+.headerGrid {
+    display: grid;
+    grid-template-columns: auto auto auto;
+    padding: 10px;
+    justify-items: center; 
+    align-items:end; 
+    gap: 8;
+}
+
+.headerGrid div {
+  background-color: #f1f1f1;
+  border: 1px solid black;
+  padding: 10px;
+  font-size: 30px;
+}
+
+
+
+
+
+
 
 .site-header {
     background: #fff;
