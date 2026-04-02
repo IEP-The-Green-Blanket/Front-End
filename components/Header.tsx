@@ -6,7 +6,8 @@ export default function Header() {
       {/* 'Mobile' layout */}
       <div className="headerGrid">
         <img 
-          src="/images/green_wrt_logo.png" 
+          src="/images/green_wrt.png"
+          className="max-w-21"
           alt="" />
         <Link href="/" className="logo-link">
           <img 
@@ -15,9 +16,8 @@ export default function Header() {
             className="logo fuseColTwo" />
         </Link>
         <img 
-          src="/images/blanket_wrt_logo.png" 
-          alt=""
-          className="max-h-8" />
+          src="/images/blanket_wrt.png" 
+          alt="" />
         <Link href="/">
           <img 
             src="/images/btn_home.png" 
