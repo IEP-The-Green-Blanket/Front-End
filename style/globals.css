@@ -58,11 +58,12 @@ h1 {
 
 .headerGrid {
     display: grid;
-    grid-template-columns: auto auto auto;
+    grid-template-columns: repeat(3, auto);
+    grid-template-rows: repeat(3, auto);
     padding: 10px;
     justify-items: center; 
-    align-items:end; 
-    gap: 21;
+    align-items: end; 
+    gap: 21px;
 }
 
 .headerGrid div {
@@ -71,6 +72,25 @@ h1 {
   padding: 10px;
   font-size: 30px;
 }
+  /* Header specifications: positioning of the items in the grid */
+
+.headerGrid > *:nth-child(1) { 
+    grid-column: 1; 
+    grid-row: 1;
+    max-height: 10rem;
+ }
+.headerGrid > *:nth-child(2) { grid-column: 2; grid-row: 1 / span 2; }
+.headerGrid > *:nth-child(3) { 
+    grid-column: 3; 
+    grid-row: 1;
+    max-height: 10rem; }
+
+.headerGrid > *:nth-child(4) { grid-column: 1; grid-row: 2; }
+.headerGrid > *:nth-child(5) { grid-column: 3; grid-row: 2; }
+
+.headerGrid > *:nth-child(6) { grid-column: 1; grid-row: 3; }
+.headerGrid > *:nth-child(7) { grid-column: 2; grid-row: 3; }
+.headerGrid > *:nth-child(8) { grid-column: 3; grid-row: 3; }
 
 .logo-link {
     display: flex;

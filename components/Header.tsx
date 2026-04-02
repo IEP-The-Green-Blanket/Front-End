@@ -5,17 +5,24 @@ export default function Header() {
     <header className="site-header">
       {/* 'Mobile' layout */}
       <div className="headerGrid">
+        <img 
+          src="/images/green_wrt_logo.png" 
+          alt="" />
+        <Link href="/" className="logo-link">
+          <img 
+            src="/images/Green_Blanket.png" 
+            alt="..." 
+            className="logo fuseColTwo" />
+        </Link>
+        <img 
+          src="/images/blanket_wrt_logo.png" 
+          alt=""
+          className="max-h-8" />
         <Link href="/">
           <img 
             src="/images/btn_home.png" 
             alt="oval-shaped button reading 'home' with a green frame and a house in the upper right corner."
             className="max-h-8 transition-transform duration-15 active:scale-90" />
-        </Link>
-        <Link href="/" className="logo-link">
-          <img 
-            src="/images/Green_Blanket.png" 
-            alt="..." 
-            className="logo" />
         </Link>
         <Link href="/">
           <img 
