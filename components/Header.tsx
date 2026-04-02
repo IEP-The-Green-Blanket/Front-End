@@ -5,35 +5,42 @@ export default function Header() {
     <header className="site-header">
       {/* 'Mobile' layout */}
       <div className="headerGrid">
-        <Link href="/">
-          <img 
-            src="/images/btn_home.png" 
-            alt="oval-shaped button reading 'home' with a green frame and a house in the upper right corner."
-            className="max-h-8 transition-transform duration-15 active:scale-90" />
-        </Link>
+        <img 
+          src="/images/green_wrt.png"
+          className="max-w-21"
+          alt="" />
         <Link href="/" className="logo-link">
           <img 
             src="/images/Green_Blanket.png" 
             alt="..." 
-            className="logo" />
+            className="logo fuseColTwo" />
         </Link>
+        <img 
+          src="/images/blanket_wrt.png" 
+          alt="" />
         <Link href="/">
+          <img 
+            src="/images/btn_home.png" 
+            alt="oval-shaped button reading 'home' with a green frame and a house in the upper right corner."
+            className="transition-transform duration-15 active:scale-90" />
+        </Link>
+        <Link href="/login">
           <img 
             src="/images/btn_login.png" 
             alt="oval-shaped button reading 'login' with a greem frame and a person icon in the upper right corner."
-            className="max-h-8 transition-transform duration-15 active:scale-90" />
+            className="transition-transform duration-15 active:scale-90" />
         </Link>
         <Link href="/reporting">
           <img 
             src="/images/btn_alert_us.png" 
             alt="oval-shaped button reading 'alert us' with a green frame and a megaphone in the upper right corner."
-            className="max-h-8 transition-transform duration-15 active:scale-90" />
+            className="transition-transform duration-15 active:scale-90" />
         </Link>
-        <Link href="/">
+        <Link href="/analysis">
           <img 
             src="/images/btn_analysis.png" 
             alt="oval-shaped button reading 'analysis' with a green frame and a chart in the upper right corner."
-            className="max-h-8 transition-transform duration-15 active:scale-90" />
+            className="transition-transform duration-15 active:scale-90" />
         </Link>
         <Link href="/">
           <img 
