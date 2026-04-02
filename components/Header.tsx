@@ -17,6 +17,7 @@ export default function Header() {
         </Link>
         <img 
           src="/images/blanket_wrt.png" 
+          className="max-w-25"
           alt="" />
         <Link href="/">
           <img 
