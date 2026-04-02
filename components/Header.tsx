@@ -47,7 +47,7 @@ export default function Header() {
           <img 
             src="/images/btn_contact.png" 
             alt="oval-shaped button reading 'contact' with a green frame and a information icon in the upper right corner."
-            className="max-h-8 transition-transform duration-15 active:scale-90" />
+            className="ransition-transform duration-15 active:scale-90" />
         </Link>
       </div>
 
