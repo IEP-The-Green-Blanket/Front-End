@@ -16,8 +16,8 @@ export const RegisterFields: React.FC = () => {
   // if the user is already loged in than set isLoggedIn to True
   // this check only runs when the page first is loaded.
   React.useEffect(() => {
-    const loginName = localStorage.getItem("loginName");
-    if (loginName) {
+    const registerName = localStorage.getItem("loginName");
+    if (registerName) {
       setIsLoggedIn(true);
     }
   }, []);
@@ -29,8 +29,8 @@ export const RegisterFields: React.FC = () => {
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
-    // set the loginName, password an email into a string
-    const loginName = formData.get("loginName") as string;
+    // set the registerName, password an email into a string
+    const registerName = formData.get("registerName") as string;
     const password = formData.get("password") as string;
     const email = formData.get("email") as string;
 
@@ -39,12 +39,12 @@ export const RegisterFields: React.FC = () => {
     // this is for now a mock up untill the back end is ready for registers
     try {
       const response = await LoginService.registerUser(
-        loginName,
+        registerName,
         password,
         email,
       );
       if (response.ok) {
-        localStorage.setItem("loginName", loginName);
+        localStorage.setItem("loginName", registerName);
         console.log("Fake register completed.");
         router.push("/");
       } else {
@@ -68,17 +68,19 @@ export const RegisterFields: React.FC = () => {
   return (
     <div className="flex items-center justify-center bg-gray-50 px-4 pt-5">
       <div className="w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-center text-gray-900">Login</h1>
+        <h1 className="text-2xl font-bold text-center text-gray-900">
+          Register
+        </h1>
 
         {/* make a form that will trigger handleRegister when pressing a confirm button */}
         <form className="space-y-4" onSubmit={handleRegister}>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Login name
+              Register your name
             </label>
             <input
               type="text"
-              name="loginName"
+              name="registerName"
               placeholder="Bart"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               required

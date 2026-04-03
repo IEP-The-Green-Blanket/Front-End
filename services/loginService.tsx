@@ -20,12 +20,12 @@ export const LoginService = {
     }
   },
 
-  async registerUser(userName: string, password: string, email: string) {
+  async registerUser(registerName: string, password: string, email: string) {
     // makes a fake hardcoded back end
     const hardcodedUsers = [
       {
         id: 1,
-        userName: "alice",
+        registerName: "alice",
         password: "alice123",
         email: "alice@mail.com",
       },
@@ -34,7 +34,7 @@ export const LoginService = {
 
     // if the user isent in teh fake hardcoded back end than the user will login with the registered data
     const existingUser = hardcodedUsers.find(
-      (user) => user.userName === userName || user.email === email,
+      (user) => user.registerName === registerName || user.email === email,
     );
 
     if (existingUser) {
@@ -50,7 +50,7 @@ export const LoginService = {
 
     const newUser = {
       id: hardcodedUsers.length + 1,
-      userName,
+      registerName,
       password,
       email,
     };
