@@ -21,6 +21,7 @@ export const LoginService = {
   },
 
   async registerUser(userName: string, password: string, email: string) {
+    // makes a fake hardcoded back end
     const hardcodedUsers = [
       {
         id: 1,
@@ -31,6 +32,7 @@ export const LoginService = {
       { id: 2, userName: "bob", password: "bob123", email: "bob@mail.com" },
     ];
 
+    // if the user isent in teh fake hardcoded back end than the user will login with the registered data
     const existingUser = hardcodedUsers.find(
       (user) => user.userName === userName || user.email === email,
     );

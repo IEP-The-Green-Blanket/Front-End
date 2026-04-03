@@ -22,7 +22,7 @@ export const LoginFields: React.FC = () => {
     }
   }, []);
 
-  // make a form event where i can extract the input ino data
+  // make a form event where i can extract the input into data
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
@@ -118,6 +118,18 @@ export const LoginFields: React.FC = () => {
             {loading ? "Loading..." : "Confirm"}
           </button>
         </form>
+
+        {/* if the user doesnt have a account they can press the register button and get send to the register page */}
+        <p className="mt-4 text-center text-sm text-gray-600">
+          Don't have an account?
+        </p>
+
+        <a
+          href="/register"
+          className="mt-3 inline-flex w-full items-center justify-center rounded-md bg-green-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-700"
+        >
+          Register
+        </a>
       </div>
     </div>
   );

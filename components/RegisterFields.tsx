@@ -5,10 +5,16 @@ import { useRouter } from "next/navigation";
 import React from "react";
 
 export const RegisterFields: React.FC = () => {
+  // some variables that help with:
+  // if the site is loading
   const [loading, setLoading] = React.useState(false);
+  // if the user is already logged in or not
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
+  // pathing so that i can send the user to other pages
   const router = useRouter();
 
+  // if the user is already loged in than set isLoggedIn to True
+  // this check only runs when the page first is loaded.
   React.useEffect(() => {
     const loginName = localStorage.getItem("loginName");
     if (loginName) {
@@ -16,18 +22,21 @@ export const RegisterFields: React.FC = () => {
     }
   }, []);
 
+  // make a form event where i can extract the input into data
   const handleRegister = async (
     event: React.SyntheticEvent<HTMLFormElement>,
   ) => {
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
+    // set the loginName, password an email into a string
     const loginName = formData.get("loginName") as string;
     const password = formData.get("password") as string;
     const email = formData.get("email") as string;
 
     setLoading(true);
-
+    // sends a request with registerUser to the back end
+    // this is for now a mock up untill the back end is ready for registers
     try {
       const response = await LoginService.registerUser(
         loginName,
@@ -49,35 +58,19 @@ export const RegisterFields: React.FC = () => {
     }
   };
 
+  // if the user is already loged in send the user to the login page where they can logout if they want
   if (isLoggedIn) {
-    const loginName = localStorage.getItem("loginName");
-    const handleLogout = () => {
-      localStorage.removeItem("loginName");
-      setIsLoggedIn(false);
-      router.push("/");
-    };
-    return (
-      <div className="flex-col items-center justify-center bg-gray-50 px-4 pt-5">
-        <div className="w-full max-w-sm text-center">
-          <p className="text-lg font-semibold text-gray-900">
-            {loginName} is already logged in.
-          </p>
-        </div>
-        <button
-          onClick={handleLogout}
-          className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors"
-        >
-          Logout
-        </button>
-      </div>
-    );
+    router.push("/login");
+    return;
   }
 
+  // if the user is not loged in return the form to fill in there register data
   return (
     <div className="flex items-center justify-center bg-gray-50 px-4 pt-5">
       <div className="w-full max-w-sm">
         <h1 className="text-2xl font-bold text-center text-gray-900">Login</h1>
 
+        {/* make a form that will trigger handleRegister when pressing a confirm button */}
         <form className="space-y-4" onSubmit={handleRegister}>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
