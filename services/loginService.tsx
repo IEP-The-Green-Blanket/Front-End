@@ -1,6 +1,8 @@
 const apiUrl = process.env.NEXT_PUBLIC_URL;
 
 export const LoginService = {
+  // recieves a username and password an will make a
+  // POST request to the given back end to and waits for a respond of the back end
   async loginUser(userName: string, password: string) {
     try {
       const response = await fetch(`${apiUrl}/api/Auth/login`, {
@@ -16,5 +18,49 @@ export const LoginService = {
       console.error("Login error:", error);
       throw error;
     }
+  },
+
+  async registerUser(userName: string, password: string, email: string) {
+    const hardcodedUsers = [
+      {
+        id: 1,
+        userName: "alice",
+        password: "alice123",
+        email: "alice@mail.com",
+      },
+      { id: 2, userName: "bob", password: "bob123", email: "bob@mail.com" },
+    ];
+
+    const existingUser = hardcodedUsers.find(
+      (user) => user.userName === userName || user.email === email,
+    );
+
+    if (existingUser) {
+      return {
+        ok: false,
+        status: 409,
+        json: async () => ({
+          message: "Gebruiker bestaat al",
+          user: existingUser,
+        }),
+      };
+    }
+
+    const newUser = {
+      id: hardcodedUsers.length + 1,
+      userName,
+      password,
+      email,
+    };
+
+    return {
+      ok: true,
+      status: 201,
+      json: async () => ({
+        message: "Registratie geslaagd (mock)",
+        user: newUser,
+        seedUsers: hardcodedUsers,
+      }),
+    };
   },
 };
