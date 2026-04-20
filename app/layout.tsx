@@ -1,6 +1,19 @@
 import Header from "@/components/Header";
 import "@/style/globals.css";
 
+export const metadata = {
+  title: "Green Blanket",
+  description: "Water Quality Monitoring System",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/public_images/green_blanket_logo.png",
+  },
+};
+
+export const viewport = {
+  themeColor: "#2e7d32",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -25,6 +38,17 @@ export default function RootLayout({
           </a>{" "}
           for the domain name.
         </footer>
+        <script
+  dangerouslySetInnerHTML={{
+    __html: `
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw.js');
+        });
+      }
+    `,
+  }}
+/>
       </body>
     </html>
   );
