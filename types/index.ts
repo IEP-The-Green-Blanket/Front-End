@@ -11,7 +11,7 @@ export type StatusMessage = {
 };
 
 export enum ReportSubject {
-  pollution = "Pollution ",
+  pollution = "Pollution",
   quality = "Poor water quality",
   bloom = "Algae/Hyacinth bloom",
   other = "Other (specify)"
