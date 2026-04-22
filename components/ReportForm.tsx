@@ -5,6 +5,7 @@ import { ReportSubject, StatusMessage } from "@/types";
 import { useRouter } from "next/navigation";
 import SmartField from "./SmartField";
 import style from '@/style/forms.module.css';
+import { timeStamp } from "console";
 
 const ReportForm: React.FC = () => {
     const [name, setName] = useState("");
@@ -80,6 +81,21 @@ const ReportForm: React.FC = () => {
         }
 
         try{
+            await fetch("http://localhost:5678/webhook-test/90764466-79fd-474b-8c5c-1a3dbca8a1df", {
+                method: "POST",
+                headers: { "Content-Type": "application/json"},
+                body: JSON.stringify({
+                        subject: reportType,
+                        content: reportType === ReportSubject.other ? otherCategory : reportType,
+                        message: message ? message : "no additional information was provided by the sender.",
+                        sender: email,
+                        locale: location,
+                        logged: new Date().toLocaleString("en-EN", {
+                            dateStyle: "full",
+                            timeStyle: "short"
+                        }),
+                })
+            })
             setStatusMessages([{ message: "Submission accepted! We are redirecting you to the home page. Please wait...", type: "success" }]);
 
             setTimeout(() => {
