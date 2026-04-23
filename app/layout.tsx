@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import "@/style/globals.css";
+import InstallButton from "@/components/InstallButton";
 
 export const metadata = {
   title: "Green Blanket",
@@ -49,6 +50,7 @@ export default function RootLayout({
     `,
   }}
 />
+<InstallButton />
       </body>
     </html>
   );
