@@ -42,10 +42,10 @@ export default function Header() {
             className="transition-transform duration-15 active:scale-90"
           />
         </Link>
-        <Link href="/">
+        <Link href="/chatbot">
           <img
             src="/images/btn_contact.png"
-            alt="oval-shaped button reading 'contact' with a green frame and a information icon in the upper right corner."
+            alt="oval-shaped button reading 'chatbot' with a green frame and a information icon in the upper right corner."
             className="ransition-transform duration-15 active:scale-90"
           />
         </Link>
