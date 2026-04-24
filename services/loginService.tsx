@@ -20,49 +20,20 @@ export const LoginService = {
     }
   },
 
-  async registerUser(registerName: string, password: string, email: string) {
-    // makes a fake hardcoded back end
-    const hardcodedUsers = [
-      {
-        id: 1,
-        registerName: "alice",
-        password: "alice123",
-        email: "alice@mail.com",
-      },
-      { id: 2, userName: "bob", password: "bob123", email: "bob@mail.com" },
-    ];
+  async registerUser(username: string, password: string, email: string) {
+    try {
+      const response = await fetch(`${apiUrl}/api/Auth/signup`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, email, password, role: "Tourist" }),
+      });
 
-    // if the user isent in teh fake hardcoded back end than the user will login with the registered data
-    const existingUser = hardcodedUsers.find(
-      (user) => user.registerName === registerName || user.email === email,
-    );
-
-    if (existingUser) {
-      return {
-        ok: false,
-        status: 409,
-        json: async () => ({
-          message: "Gebruiker bestaat al",
-          user: existingUser,
-        }),
-      };
+      return response;
+    } catch (error) {
+      console.error("Register error:", error);
+      throw error;
     }
-
-    const newUser = {
-      id: hardcodedUsers.length + 1,
-      registerName,
-      password,
-      email,
-    };
-
-    return {
-      ok: true,
-      status: 201,
-      json: async () => ({
-        message: "Registratie geslaagd (mock)",
-        user: newUser,
-        seedUsers: hardcodedUsers,
-      }),
-    };
   },
 };
