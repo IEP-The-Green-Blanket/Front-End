@@ -2,6 +2,8 @@ const CACHE_NAME = "green-blanket-v1";
 
 const urlsToCache = ["/", "/offline"];
 
+// this is the service worker file that allows the app to work offline and be installable as a PWA. All it does now is cache the offline page and returns it when the user is offline.
+
 // Install
 self.addEventListener("install", (event) => {
   event.waitUntil(

@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import "@/style/globals.css";
 
+// this allows the user to download the app
 export const metadata = {
   title: "Green Blanket",
   description: "Water Quality Monitoring System",
@@ -38,9 +39,11 @@ export default function RootLayout({
           </a>{" "}
           for the domain name.
         </footer>
+
         <script
           dangerouslySetInnerHTML={{
             __html: `
+              // the browser checks if service workers are supported and registers the service worker for offline capabilities
               if ('serviceWorker' in navigator) {
               window.addEventListener('load', function() {
               navigator.serviceWorker.register('/sw.js');
