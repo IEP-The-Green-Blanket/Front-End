@@ -63,7 +63,7 @@ export const LoginFields: React.FC = () => {
       <div className="flex-col items-center justify-center bg-gray-50 px-4 pt-5">
         <div className="w-full max-w-sm text-center">
           <p className="text-lg font-semibold text-gray-900">
-            {loginName} is already logged in.
+            {loginName} is logged in now.
           </p>
         </div>
         <button

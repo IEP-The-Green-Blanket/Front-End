@@ -1,16 +1,13 @@
 const CACHE_NAME = "green-blanket-v1";
 
-const urlsToCache = [
-  "/",
-  "/offline",
-];
+const urlsToCache = ["/", "/offline"];
 
 // Install
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(urlsToCache);
-    })
+    }),
   );
 });
 
@@ -23,15 +20,13 @@ self.addEventListener("activate", (event) => {
           if (cache !== CACHE_NAME) {
             return caches.delete(cache);
           }
-        })
+        }),
       );
-    })
+    }),
   );
 });
 
-// Fetch
+// Fetch - if the user is offline, it shows the offline page
 self.addEventListener("fetch", (event) => {
-  event.respondWith(
-    fetch(event.request).catch(() => caches.match("/offline"))
-  );
+  event.respondWith(fetch(event.request).catch(() => caches.match("/offline")));
 });

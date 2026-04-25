@@ -1,6 +1,5 @@
-import Header from "@/components/Header";
+import ConditionalHeader from "@/components/ConditionalHeader";
 import "@/style/globals.css";
-import InstallButton from "@/components/InstallButton";
 
 export const metadata = {
   title: "Green Blanket",
@@ -23,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Header />
+        <ConditionalHeader />
         <main>{children}</main>
         <footer>
           © 2026 - The Green Blanket - Thanks to{" "}
@@ -40,17 +39,16 @@ export default function RootLayout({
           for the domain name.
         </footer>
         <script
-  dangerouslySetInnerHTML={{
-    __html: `
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-          navigator.serviceWorker.register('/sw.js');
-        });
-      }
-    `,
-  }}
-/>
-<InstallButton />
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+              window.addEventListener('load', function() {
+              navigator.serviceWorker.register('/sw.js');
+            });
+          }
+          `,
+          }}
+        />
       </body>
     </html>
   );

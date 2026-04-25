@@ -1,6 +1,16 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export default function Header() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("loginName");
+    setIsLoggedIn(Boolean(storedUser));
+  }, []);
+
   return (
     <header className="site-header">
       {/* 'Mobile' layout */}
@@ -23,8 +33,14 @@ export default function Header() {
         </Link>
         <Link href="/login">
           <img
-            src="/images/btn_login.png"
-            alt="oval-shaped button reading 'login' with a greem frame and a person icon in the upper right corner."
+            src={
+              isLoggedIn ? "/images/btn_logout.png" : "/images/btn_login.png"
+            }
+            alt={
+              isLoggedIn
+                ? "oval-shaped button reading 'logout' with a green frame and a logout icon in the upper right corner."
+                : "oval-shaped button reading 'login' with a greem frame and a person icon in the upper right corner."
+            }
             className="transition-transform duration-15 active:scale-90"
           />
         </Link>

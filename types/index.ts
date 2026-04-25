@@ -10,6 +10,8 @@ export type StatusMessage = {
   type: "error" | "success";
 };
 
+export type Status = "safe" | "unsafe" | "dangerous";
+
 export enum ReportSubject {
   pollution = "Pollution",
   quality = "Poor water quality",
