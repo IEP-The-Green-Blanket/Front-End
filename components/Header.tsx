@@ -1,15 +1,21 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function Header() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     const storedUser = localStorage.getItem("loginName");
     setIsLoggedIn(Boolean(storedUser));
   }, []);
+
+  if (pathname === "/offline") {
+    return null;
+  }
 
   return (
     <header className="site-header">

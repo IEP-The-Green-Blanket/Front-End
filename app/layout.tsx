@@ -1,4 +1,4 @@
-import ConditionalHeader from "@/components/ConditionalHeader";
+import Header from "@/components/Header";
 import "@/style/globals.css";
 
 export const metadata = {
@@ -22,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <ConditionalHeader />
+        <Header />
         <main>{children}</main>
         <footer>
           © 2026 - The Green Blanket - Thanks to{" "}
