@@ -16,8 +16,8 @@ export const RegisterFields: React.FC = () => {
   // if the user is already loged in than set isLoggedIn to True
   // this check only runs when the page first is loaded.
   React.useEffect(() => {
-    const registerName = localStorage.getItem("loginName");
-    if (registerName) {
+    const username = localStorage.getItem("loginName");
+    if (username) {
       setIsLoggedIn(true);
     }
   }, []);
@@ -29,8 +29,8 @@ export const RegisterFields: React.FC = () => {
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
-    // set the registerName, password an email into a string
-    const registerName = formData.get("registerName") as string;
+    // set the username, password an email into a string
+    const username = formData.get("username") as string;
     const password = formData.get("password") as string;
     const email = formData.get("email") as string;
 
@@ -39,13 +39,12 @@ export const RegisterFields: React.FC = () => {
     // this is for now a mock up untill the back end is ready for registers
     try {
       const response = await LoginService.registerUser(
-        registerName,
+        username,
         password,
         email,
       );
       if (response.ok) {
-        localStorage.setItem("loginName", registerName);
-        console.log("Fake register completed.");
+        localStorage.setItem("loginName", username);
         router.push("/");
       } else {
         const errorData = await response.json();
@@ -80,7 +79,7 @@ export const RegisterFields: React.FC = () => {
             </label>
             <input
               type="text"
-              name="registerName"
+              name="username"
               placeholder="Bart"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               required
