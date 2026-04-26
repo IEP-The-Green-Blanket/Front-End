@@ -138,7 +138,7 @@ const ReportForm: React.FC = () => {
     try {
       // 1. Send to n8n webhook (email routing + AI agent)
       await fetch(
-        "http://greenblanket.crabdance.com:8585/webhook/90764466-79fd-474b-8c5c-1a3dbca8a1df",
+        "https://greenblanket.crabdance.com/n8n/webhook/90764466-79fd-474b-8c5c-1a3dbca8a1df",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -157,7 +157,7 @@ const ReportForm: React.FC = () => {
       );
 
       // 2. Send to backend API (always, regardless of category)
-      await fetch("http://greenbed.crabdance.com/api/reports", {
+      await fetch("https://greenbed.crabdance.com/api/reports", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
