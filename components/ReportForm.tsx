@@ -157,7 +157,7 @@ const ReportForm: React.FC = () => {
       );
 
       // 2. Send to backend API (always, regardless of category)
-      await fetch("https://greenbed.crabdance.com/api/reports", {
+      await fetch("http://greenbed.crabdance.com/api/reports", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
