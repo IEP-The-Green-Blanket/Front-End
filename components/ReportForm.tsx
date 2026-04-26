@@ -71,7 +71,7 @@ const ReportForm: React.FC = () => {
         return isValid;
      };
 
-    const handleReportSubmit = async (event: { preventDefault: () => void }) => {
+/*    const handleReportSubmit = async (event: { preventDefault: () => void }) => {
         event.preventDefault();
         setIsSubmitting(true);
 
@@ -106,6 +106,83 @@ const ReportForm: React.FC = () => {
             setStatusMessages([{ message: (error as Error).message, type: "error" }]);
         };
     }
+*/
+    
+const reportOptionsIdMap: Record<string, number> = {
+    [ReportSubject.pollution]: 1,
+    [ReportSubject.quality]: 2,
+    [ReportSubject.bloom]: 3,
+    [ReportSubject.other]: 4,
+};
+
+const buildMessage = (): string => {
+    if (reportType === ReportSubject.other) {
+        const parts = [];
+        if (otherCategory.trim()) parts.push(`Category specified: ${otherCategory}`);
+        if (message.trim()) parts.push(`Additional info: ${message}`);
+        return parts.join(" | ") || "No details provided.";
+    }
+    return message.trim() || "No additional information was provided.";
+};
+
+const handleReportSubmit = async (event: { preventDefault: () => void }) => {
+    event.preventDefault();
+    setIsSubmitting(true);
+
+    if (!formValidator()) {
+        setIsSubmitting(false);
+        return;
+    }
+
+    try {
+        // 1. Send to n8n webhook (email routing + AI agent)
+        await fetch("http://greenblanket.crabdance.com:8585/webhook/90764466-79fd-474b-8c5c-1a3dbca8a1df", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                subject: reportType,
+                name: name,
+                email: email,
+                location: location,
+                message: buildMessage(),
+                timestamp: new Date().toLocaleString("en-GB", {
+                    dateStyle: "full",
+                    timeStyle: "short"
+                }),
+            })
+        });
+
+        // 2. Send to backend API (always, regardless of category)
+        await fetch("http://greenbed.crabdance.com/api/reports", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                reportOptionsId: reportOptionsIdMap[reportType] ?? 4,
+                name: name,
+                email: email,
+                message: buildMessage(),
+                location: location,
+            })
+        });
+
+        setStatusMessages([{ 
+            message: "Submission accepted! We are redirecting you to the home page. Please wait...", 
+            type: "success" 
+        }]);
+
+        setTimeout(() => {
+            routing.push("/");
+        }, 3000);
+
+    } catch (error) {
+        setIsSubmitting(false);
+        setStatusMessages([{ 
+            message: (error as Error).message, 
+            type: "error" 
+        }]);
+    }
+};
+
     // HTML display
     return (
         <div className="w-[90%] m-auto">
