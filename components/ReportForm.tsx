@@ -1,7 +1,7 @@
 "use client";
 
 import React, { isValidElement, useState } from "react";
-import { ReportSubject, StatusMessage } from "@/types";
+import { ReportLocations, ReportSubject, StatusMessage } from "@/types";
 import { useRouter } from "next/navigation";
 import SmartField from "./SmartField";
 import style from "@/style/forms.module.css";
@@ -71,44 +71,7 @@ const ReportForm: React.FC = () => {
     return isValid;
   };
 
-  /*    const handleReportSubmit = async (event: { preventDefault: () => void }) => {
-        event.preventDefault();
-        setIsSubmitting(true);
-
-        if (!formValidator()){
-            setIsSubmitting(false);
-            return;
-        }
-
-        try{
-            await fetch("http://localhost:5678/webhook-test/90764466-79fd-474b-8c5c-1a3dbca8a1df", {
-                method: "POST",
-                headers: { "Content-Type": "application/json"},
-                body: JSON.stringify({
-                        subject: reportType,
-                        content: reportType === ReportSubject.other ? otherCategory : reportType,
-                        message: message ? message : "no additional information was provided by the sender.",
-                        sender: email,
-                        locale: location,
-                        logged: new Date().toLocaleString("en-EN", {
-                            dateStyle: "full",
-                            timeStyle: "short"
-                        }),
-                })
-            })
-            setStatusMessages([{ message: "Submission accepted! We are redirecting you to the home page. Please wait...", type: "success" }]);
-
-            setTimeout(() => {
-                routing.push("/");
-            }, 3000);
-        } catch (error) {
-            setIsSubmitting(false);
-            setStatusMessages([{ message: (error as Error).message, type: "error" }]);
-        };
-    }
-*/
-
-  const reportOptionsIdMap: Record<string, number> = {
+ const reportOptionsIdMap: Record<string, number> = {
     [ReportSubject.pollution]: 1,
     [ReportSubject.quality]: 2,
     [ReportSubject.bloom]: 3,
@@ -244,7 +207,19 @@ const ReportForm: React.FC = () => {
               value={location}
               confirmed={isReviewing}
               onChange={setLocation}
-              placeholder_text="e.g. Hartbeespoortdam West"
+              category="select"
+              options={
+                <>
+                  <option className="text-sm" value="">
+                    -- Select a location --
+                  </option>
+                  {Object.values(ReportLocations).map((type) => (
+                    <option className="text-sm" key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}{" "}
+                </>
+              }
               error={locationError}
             />
 

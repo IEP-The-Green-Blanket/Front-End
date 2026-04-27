@@ -19,6 +19,19 @@ export enum ReportSubject {
   other = "Other (specify)",
 }
 
+export enum ReportLocations {
+  loc1 = "Schoemansville Waterfront",
+  loc2 = "Kosmos Marina",
+  loc3 = "Pecanwood Shore",
+  loc4 = "Meerhof East Bank",
+  loc5 = "Ifafi Inlet",
+  loc6 = "Melodie Bay",
+  loc7 = "Magalies River Mouth",
+  loc8 = "Crocodile River Delta", 
+  loc9 = "Cableway Point",
+  loc10 = "Broederstroom Wetlands",
+}
+
 //analys
 export type DataPoint = {
   x: string;
