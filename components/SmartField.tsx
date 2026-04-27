@@ -44,7 +44,7 @@ const SmartField: React.FC < {
 
             <div
                 className="relative w-full"
-                style={{ minHeight: "2.625rem" }}>
+                style={{ minHeight: "3.5rem" }}>
 
                 {!category && (
                     <input
