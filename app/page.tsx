@@ -8,8 +8,8 @@ export default function Home() {
       <section className="relative pt-16 pb-24 md:pt-24 md:pb-40 px-4 overflow-hidden">
         
         {/* Cinematic Watermark (Mobile Hidden) */}
-        <div className="absolute top-10 left-10 opacity-[0.03] pointer-events-none select-none hidden lg:block">
-          <h1 className="text-[18rem] font-black italic tracking-tighter leading-none uppercase">Harties</h1>
+        <div className="absolute top-10 left-10 opacity-[0.1] pointer-events-none select-none hidden lg:block">
+          <h1 className="text-[18rem] font-black italic tracking-tighter leading-none uppercase">Pillar 11</h1>
         </div>
 
         <div className="max-w-7xl mx-auto space-y-16 md:space-y-24 relative z-10">
@@ -25,8 +25,7 @@ export default function Home() {
               Intelligence <span className="text-slate-400 font-thin italic">First.</span>
             </h2>
             <p className="text-base md:text-xl text-slate-500 font-medium max-w-2xl mx-auto leading-relaxed px-4">
-              A high-precision environmental OS utilizing IoT telemetry and 
-              forensic analytics to restore the Hartbeespoort catchment.
+              A smart environmental system powered by live sensors and in depth analysis to track down pollution and restore Hartbeespoort.
             </p>
           </div>
 

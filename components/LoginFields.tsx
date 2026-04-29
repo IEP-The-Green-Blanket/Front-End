@@ -149,7 +149,7 @@ export const LoginFields: React.FC = () => {
               href="/register"
               className="w-full inline-flex items-center justify-center gap-2 py-3 border-2 border-slate-100 rounded-xl text-xs font-black uppercase tracking-widest text-slate-400 hover:text-emerald-600 hover:border-emerald-100 transition-all"
             >
-              Register Node <ArrowRight size={14} />
+              Sign Up <ArrowRight size={14} />
             </a>
           </div>
         </div>

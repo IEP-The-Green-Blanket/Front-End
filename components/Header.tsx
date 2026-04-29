@@ -71,7 +71,7 @@ export default function Header() {
               : "border-slate-200 text-slate-900 bg-white hover:border-emerald-500 hover:text-emerald-600"
             }`}>
               {isLoggedIn ? <LogOut size={16} /> : <LogIn size={16} />}
-              <span className="hidden xl:inline">{isLoggedIn ? "Logout" : "Operator Login"}</span>
+              <span className="hidden xl:inline">{isLoggedIn ? "Logout" : "Login / Sign Up"}</span>
             </button>
           </Link>
 

@@ -17,6 +17,19 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+const damGradeExplanations: Record<string, string> = {
+  "1: Hazardous": "Toxic or completely choked by weeds. Unsafe for humans, animals, and boats.",
+  "2: Critical": "Severe pollution and thick green coverage. Bad smells and highly unsafe for recreation.",
+  "3: Very Poor": "Mostly covered in a thick green blanket. Very unhealthy for fish and aquatic life.",
+  "4: Poor": "Heavy algae or weed growth. Boating is difficult and the water looks very murky.",
+  "5: Fair": "Usable, but you will see noticeable patches of green surface weeds or debris.",
+  "6: Average": "Standard condition. Some minor green patches, but mostly clear and functioning.",
+  "7: Good": "Looking healthy. Mostly clear water, great for everyday recreation and boating.",
+  "8: Very Good": "Great water quality. Clear, healthy ecosystem and almost completely weed-free.",
+  "9: Excellent": "Sparkling and thriving. Fantastic, clean conditions for wildlife and visitors.",
+  "10: Pristine": "Crystal clear and perfectly balanced. As healthy and beautiful as nature gets."
+};
+
 export const StatusDisplay: React.FC = () => {
   const [data, setData] = useState<any>(null);
   const [aiMessage, setAiMessage] = useState<string>("Hi! I'm just checking the sensors for you...");
@@ -27,7 +40,6 @@ export const StatusDisplay: React.FC = () => {
   useEffect(() => {
     const loadSystemData = async () => {
       try {
-        // 1. Fetch Primary Telemetry from Database
         const telemetry = await analysisService.getOmniDashboard();
         const score = telemetry?.touristView?.waterHealthScore;
         
@@ -36,7 +48,6 @@ export const StatusDisplay: React.FC = () => {
         setData(telemetry);
         setIsSystemOnline(true);
 
-        // 2. Ask the Integrated AI to explain the data
         try {
           const aiResponse = await fetch("https://greenblanket.crabdance.com/api/Chatbot/ask", {
             method: "POST",
@@ -89,7 +100,7 @@ export const StatusDisplay: React.FC = () => {
       <div className="relative bg-white border border-slate-200 rounded-[2.5rem] md:rounded-[4rem] shadow-2xl overflow-hidden transition-all duration-700">
         <div className="flex flex-col lg:flex-row">
           
-          {/* THE GAUGE PANEL */}
+          {/* Gauge Panel */}
           <div className={`w-full lg:w-1/3 p-8 md:p-12 flex flex-col items-center justify-center border-b lg:border-b-0 lg:border-r border-slate-100 ${
             !isSystemOnline ? 'bg-slate-50' : isSafe ? 'bg-emerald-50/50' : isDangerous ? 'bg-rose-50/50' : 'bg-amber-50/50'
           }`}>
@@ -112,13 +123,20 @@ export const StatusDisplay: React.FC = () => {
             </div>
             
             {isSystemOnline && (
-              <p className={`mt-10 text-sm font-black uppercase italic tracking-widest text-${statusColor}-600`}>
-                {view.healthGrade}
-              </p>
+              <div className="mt-10 flex flex-col items-center text-center">
+                <p className={`text-sm font-black uppercase italic tracking-widest text-${statusColor}-600`}>
+                  {view.healthGrade}
+                </p>
+                {view.healthGrade && damGradeExplanations[view.healthGrade] && (
+                  <p className="mt-3 text-xs text-slate-500 font-medium max-w-[220px] leading-relaxed">
+                    {damGradeExplanations[view.healthGrade]}
+                  </p>
+                )}
+              </div>
             )}
           </div>
 
-          {/* THE INFORMATION PANEL */}
+          {/* Information Panel */}
           <div className="w-full lg:w-2/3 p-8 md:p-12 space-y-8 bg-white">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-1 text-center lg:text-left">
@@ -129,7 +147,7 @@ export const StatusDisplay: React.FC = () => {
               </div>
             </div>
 
-            {/* FRIENDLY AI CHATBOT BOX */}
+            {/* AI Assistant Chatbox */}
             <div className="relative group">
               <div className={`absolute -top-3 -left-2 p-2 rounded-lg shadow-lg z-10 text-white ${isSystemOnline ? 'bg-emerald-600' : 'bg-slate-500'}`}>
                 <Sparkles size={16} />
@@ -141,14 +159,14 @@ export const StatusDisplay: React.FC = () => {
                 <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                      <Heart size={12} className="text-rose-400 fill-rose-400" />
-                     <span className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-400">Green Blanket AI Assistant</span>
+                     <span className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-400">Green Blanket Chatbot</span>
                   </div>
                   {isSystemOnline && <CheckCircle2 size={14} className="text-emerald-500" />}
                 </div>
               </div>
             </div>
 
-            {/* QUICK STATS - Made Larger! */}
+            {/* Telemetry Statistics */}
             {isSystemOnline && (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5 animate-in fade-in slide-in-from-bottom-2 duration-500">
                 <StatusBadge icon={ShieldCheck} label="Swimming" status={view.swimSafety} color={isSafe ? 'emerald' : 'rose'} />
@@ -157,6 +175,7 @@ export const StatusDisplay: React.FC = () => {
               </div>
             )}
 
+            {/* Navigation Controls */}
             <div className="pt-4 flex flex-col sm:flex-row gap-4">
               <Link href="/analytics" className="flex-1 bg-slate-900 text-white font-black uppercase tracking-widest text-xs py-5 rounded-2xl hover:bg-emerald-600 transition-all shadow-xl flex items-center justify-center gap-3 group">
                 Enter Analytics Center
@@ -164,7 +183,7 @@ export const StatusDisplay: React.FC = () => {
               </Link>
               {!isSystemOnline && (
                  <button onClick={() => window.location.reload()} className="px-10 py-5 border-2 border-slate-200 text-slate-400 font-black uppercase text-[10px] tracking-widest rounded-2xl hover:bg-slate-50 transition-colors">
-                    Try Reconnecting
+                   Try Reconnecting
                  </button>
               )}
             </div>
@@ -176,17 +195,13 @@ export const StatusDisplay: React.FC = () => {
   );
 };
 
-// --- UPDATED SUB-COMPONENTS (Made larger) ---
+{/* Sub-Components */}
 
 const StatusBadge = ({ icon: Icon, label, status, color }: any) => (
-  // Increased padding (px-5 py-4) and gaps
   <div className="flex items-center gap-3 md:gap-4 bg-slate-50 px-5 py-4 rounded-2xl border border-slate-100 shadow-sm">
-    {/* Increased icon size from 16 to 20 */}
     <Icon size={20} className="text-slate-400 shrink-0" />
     <div className="min-w-0">
-      {/* Increased label from text-[7px] to text-[9px] */}
       <p className="text-[9px] font-black uppercase text-slate-400 leading-none mb-1.5">{label}</p>
-      {/* Increased status from text-[9px] to text-[11px]/text-xs */}
       <p className={`text-[11px] md:text-xs font-black uppercase tracking-tight truncate ${color === 'emerald' ? 'text-emerald-600' : color === 'rose' ? 'text-rose-600' : 'text-slate-900'}`}>{status}</p>
     </div>
   </div>
