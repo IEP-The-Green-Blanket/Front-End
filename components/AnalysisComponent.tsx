@@ -115,11 +115,11 @@ export const AnalysisComponent: React.FC = () => {
   if (isLoading || !data) return <LoadingState />;
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-emerald-100 pb-20">
+    <div className="min-h-screen bg-transparent text-slate-900 font-sans selection:bg-emerald-100 pb-20">
       <div className="max-w-[1650px] mx-auto p-4 md:p-6 lg:p-10 space-y-6 md:space-y-8">
         
-        <header className="flex flex-col lg:flex-row justify-between items-start lg:items-end border-b-2 border-slate-900 pb-6 md:pb-8 gap-4 md:gap-6">
-          <div className="space-y-2">
+        <header className="flex flex-col lg:flex-row justify-between items-start lg:items-end pb-6 md:pb-8 gap-4 md:gap-6 border-b-2 border-slate-900/10">
+          <div className="space-y-2 bg-white/80 p-6 rounded-3xl shadow-sm border border-slate-100 backdrop-blur-sm w-full lg:w-auto">
             <div className="flex items-center gap-3">
                <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-slate-900 uppercase italic">
@@ -127,7 +127,7 @@ export const AnalysisComponent: React.FC = () => {
               </h1>
             </div>
             <div className="flex flex-wrap items-center gap-3 md:gap-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-              <span className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-md border border-slate-200 shadow-sm">
+              <span className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-md border border-slate-200 shadow-sm">
                 <Clock size={14} className="text-emerald-500" /> {new Date(data.omni?.timestamp).toLocaleString()}
               </span>
               <span className="flex items-center gap-2"><MapIcon size={14} /> Sector Alpha</span>
@@ -139,7 +139,7 @@ export const AnalysisComponent: React.FC = () => {
             </div>
           </div>
 
-          <nav className="flex bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm overflow-x-auto no-scrollbar w-full lg:w-auto snap-x">
+          <nav className="flex bg-white p-1.5 rounded-2xl border border-slate-200 shadow-xl overflow-x-auto no-scrollbar w-full lg:w-auto snap-x shrink-0">
             {TABS.map((tab) => {
               const isLocked = !isAuthenticated && !tab.isPublic;
               return (
@@ -160,7 +160,7 @@ export const AnalysisComponent: React.FC = () => {
           </nav>
         </header>
 
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-900 text-white p-4 md:px-8 rounded-2xl md:rounded-[2rem] shadow-xl gap-4 border-b-4 border-emerald-500">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-900 text-white p-4 md:px-8 rounded-2xl md:rounded-[2rem] shadow-2xl gap-4 border-b-4 border-emerald-500">
           <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-emerald-400">
             <RefreshCw size={14} className="animate-spin-slow shrink-0" />
             <span className="truncate">Pillar 11 Telemetry Pipeline: Active</span>
@@ -201,7 +201,7 @@ export const AnalysisComponent: React.FC = () => {
 
 // --- SECURITY COMPONENT ---
 const LockedState = () => (
-  <div className="bg-white border border-slate-200 rounded-[3rem] p-10 md:p-20 shadow-sm flex flex-col items-center justify-center text-center min-h-[500px]">
+  <div className="bg-white border border-slate-200 rounded-[3rem] p-10 md:p-20 shadow-2xl flex flex-col items-center justify-center text-center min-h-[500px]">
     <div className="w-24 h-24 bg-rose-50 rounded-3xl flex items-center justify-center mb-8 border border-rose-100">
       <Lock size={40} className="text-rose-500" />
     </div>
@@ -274,7 +274,7 @@ const OverviewModule = ({ data }: any) => {
         </div>
 
         <div className="lg:col-span-5 flex flex-col gap-6 md:gap-8 h-full">
-          <div className="bg-white border border-slate-200 p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] shadow-sm flex flex-col h-full justify-center relative overflow-hidden">
+          <div className="bg-white border border-slate-200 p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] shadow-2xl flex flex-col h-full justify-center relative overflow-hidden">
             <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.3em] mb-4 flex items-center gap-2">
               <Activity size={16} className="text-emerald-600" /> AI Executive Summary
             </h4>
@@ -339,7 +339,7 @@ const TouristModule = ({ data }: any) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-        <div className="lg:col-span-2 bg-white border border-slate-200 p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] shadow-sm flex flex-col justify-center">
+        <div className="lg:col-span-2 bg-white border border-slate-200 p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] shadow-2xl flex flex-col justify-center">
           <h3 className="text-[10px] md:text-xs font-black uppercase text-slate-800 tracking-widest mb-6 border-b border-slate-100 pb-4">Activity Advisory</h3>
           <div className="space-y-6">
             <div className="flex items-start gap-4">
@@ -357,7 +357,7 @@ const TouristModule = ({ data }: any) => {
           </div>
         </div>
 
-        <div className={`lg:col-span-1 p-8 md:p-10 rounded-[2rem] md:rounded-[3rem] shadow-xl text-white flex flex-col items-center justify-center text-center ${isSafe ? 'bg-emerald-600' : 'bg-amber-600'}`}>
+        <div className={`lg:col-span-1 p-8 md:p-10 rounded-[2rem] md:rounded-[3rem] shadow-2xl text-white flex flex-col items-center justify-center text-center ${isSafe ? 'bg-emerald-600' : 'bg-amber-600'}`}>
           <Droplet size={48} className="opacity-80 mb-6" />
           <h4 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-80 mb-4">Current Water Grade</h4>
           <h3 className="text-7xl md:text-8xl font-black italic tracking-tighter">{wqiScore}</h3>
@@ -385,7 +385,7 @@ const ResidentModule = ({ data }: any) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-        <div className="lg:col-span-2 bg-white p-8 md:p-10 rounded-[2rem] md:rounded-[3rem] border border-slate-200 shadow-sm flex flex-col justify-center">
+        <div className="lg:col-span-2 bg-white p-8 md:p-10 rounded-[2rem] md:rounded-[3rem] border border-slate-200 shadow-2xl flex flex-col justify-center">
           <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Daily Resident Advisory</h3>
           <p className="text-2xl md:text-3xl font-black italic tracking-tighter text-slate-900 leading-snug mb-6">{data.omni?.residentView?.recommendation || "Conditions are currently stable. No immediate action required for shoreline properties."}</p>
           <div className="flex flex-col sm:flex-row gap-4">
@@ -433,7 +433,7 @@ const ForensicsModule = ({ data, chartData, dateRange, setDateRange, isMounted, 
         <DetailCard title="Remediation" value={`${data.progress?.vitalityImprovement?.percentageGain || 4.2}%`} desc="Efficiency of active nanobubble systems." />
       </div>
 
-      <div className="bg-white border border-slate-200 p-5 md:p-8 lg:p-10 rounded-[2rem] md:rounded-[3rem] shadow-sm flex flex-col">
+      <div className="bg-white border border-slate-200 p-5 md:p-8 lg:p-10 rounded-[2rem] md:rounded-[3rem] shadow-2xl flex flex-col">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 md:mb-10 gap-4 md:gap-6">
           <div>
             <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] flex items-center gap-2 mb-1">
@@ -498,7 +498,7 @@ const ForensicsModule = ({ data, chartData, dateRange, setDateRange, isMounted, 
           </SectionBox>
         </div>
 
-        <div className="lg:col-span-2 bg-white border border-slate-200 p-6 md:p-12 rounded-[2rem] md:rounded-[3rem] shadow-sm flex flex-col md:flex-row items-center gap-8 md:gap-10">
+        <div className="lg:col-span-2 bg-white border border-slate-200 p-6 md:p-12 rounded-[2rem] md:rounded-[3rem] shadow-2xl flex flex-col md:flex-row items-center gap-8 md:gap-10">
           <div className="w-full md:w-1/2">
             <h3 className="text-[11px] md:text-[12px] font-black uppercase text-slate-800 tracking-widest mb-3">Forensic Attribution Model</h3>
             <p className="text-xs md:text-sm text-slate-500 font-medium leading-relaxed max-w-md">
@@ -628,7 +628,7 @@ const AuditLogModule = ({ data, tableData, dateRange, setDateRange, isAuditLoadi
         <AuditStat label="Sensor Array Node" value="99.8%" unit="HARDWARE UPTIME" />
       </div>
       
-      <div className="bg-white border border-slate-200 rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-2xl">
         <div className="p-5 md:p-8 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-slate-50/50">
           <div>
             <h3 className="text-[10px] md:text-xs font-black uppercase text-slate-800 tracking-widest italic">Historical Audit Logs</h3>
@@ -703,26 +703,6 @@ const ModernStatusCard = ({ title, value, unit, status, color, icon: Icon }: any
   );
 };
 
-const SafetyRow = ({ label, value, color }: any) => {
-  const valLower = String(value).toLowerCase();
-  let pillColor = "text-slate-300 bg-slate-800 border-slate-700";
-  if (color) { pillColor = `text-[${color}] bg-slate-800 border-slate-700`; } 
-  else if (valLower.includes('safe') || valLower.includes('none') || valLower.includes('fresh') || valLower.includes('ideal')) { pillColor = "text-emerald-400 bg-emerald-400/10 border-emerald-400/20"; } 
-  else if (valLower.includes('caution') || valLower.includes('mild') || valLower.includes('noticeable')) { pillColor = "text-amber-400 bg-amber-400/10 border-amber-400/20"; } 
-  else if (valLower.includes('danger') || valLower.includes('risk') || valLower.includes('high') || valLower.includes('toxic')) { pillColor = "text-rose-400 bg-rose-400/10 border-rose-400/20"; }
-
-  return (
-    <div className="flex justify-between items-center p-3 md:p-4 bg-slate-800/40 rounded-xl md:rounded-2xl border border-slate-700/50 backdrop-blur-sm">
-      <span className="text-[9px] md:text-[10px] font-black uppercase text-slate-400 tracking-[0.1em] flex items-center gap-1.5 md:gap-2">
-        <div className="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0" /> <span className="truncate">{label}</span>
-      </span>
-      <span className={`text-[8px] md:text-[10px] font-black uppercase tracking-widest px-2 py-1 md:px-3 md:py-1 rounded-md md:rounded-lg border whitespace-nowrap ${pillColor}`}>
-        {value ?? "---"}
-      </span>
-    </div>
-  );
-};
-
 const TelemetryRow = ({ label, value, highlight = false, color = "emerald" }: any) => {
   const colorMap: any = { emerald: "text-emerald-700 bg-emerald-50 border-emerald-200", blue: "text-blue-700 bg-blue-50 border-blue-200", amber: "text-amber-700 bg-amber-50 border-amber-200", rose: "text-rose-700 bg-rose-50 border-rose-200", slate: "text-slate-700 bg-slate-100 border-slate-200", blueHigh: "text-blue-500 bg-blue-500/10 border-blue-500/20" };
   return (
@@ -779,7 +759,7 @@ const SectionHeader = ({ title, icon: Icon }: any) => (
 );
 
 const LoadingState = () => (
-  <div className="h-screen flex flex-col items-center justify-center bg-white text-emerald-600">
+  <div className="h-screen flex flex-col items-center justify-center bg-transparent text-emerald-600">
     <RefreshCw className="animate-spin text-emerald-500 mb-6 md:mb-8 w-[50px] h-[50px] md:w-[60px] md:h-[60px]" strokeWidth={2} />
     <p className="text-[9px] md:text-[11px] font-black uppercase tracking-[0.5em] md:tracking-[1em] animate-pulse text-slate-400 text-center px-4">Establishing Command Center Uplink</p>
   </div>
