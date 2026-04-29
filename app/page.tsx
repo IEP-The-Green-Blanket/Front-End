@@ -32,7 +32,7 @@ export default function Home() {
           {/* THE LIVE PULSE HUD */}
           <StatusDisplay />
 
-          {/* FEATURES GRID (Mobile Stacks Automatically) */}
+          {/* FEATURES GRID */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 px-4">
             <FeatureCard 
               icon={Microscope}
@@ -63,7 +63,7 @@ const FeatureCard = ({ icon: Icon, title, desc }: any) => (
     </div>
     <h3 className="text-xl font-black uppercase italic tracking-tighter text-slate-900 mb-4">{title}</h3>
     <p className="text-slate-500 text-sm font-medium leading-relaxed mb-8">{desc}</p>
-    <Link href="/analysis" className="text-[10px] font-black uppercase tracking-widest text-emerald-600 group-hover:text-emerald-500 flex items-center gap-2">
+    <Link href="/analytics" className="text-[10px] font-black uppercase tracking-widest text-emerald-600 group-hover:text-emerald-500 flex items-center gap-2">
       View Module <ArrowRight size={14} />
     </Link>
   </div>

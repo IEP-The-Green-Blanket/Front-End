@@ -13,10 +13,69 @@ import {
   Wifi,
   WifiOff,
   CheckCircle2,
-  Heart
+  Heart,
+  Download
 } from "lucide-react";
 import Link from "next/link";
 
+// --- 1. THE PERSISTENT PWA INSTALL BUTTON ---
+interface InstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+}
+
+export function InstallButton() {
+  const [deferredPrompt, setDeferredPrompt] = useState<InstallPromptEvent | null>(null);
+  // Defaulting to true so the button is ALWAYS visible
+  const [showButton, setShowButton] = useState(true);
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      event.preventDefault();
+      setDeferredPrompt(event as InstallPromptEvent);
+    };
+
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  const handleInstall = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const result = await deferredPrompt.userChoice;
+      if (result.outcome === "accepted") {
+        setDeferredPrompt(null);
+      }
+      return;
+    }
+
+    // --- BETTER DIAGNOSTICS ---
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+
+    if (isStandalone) {
+      alert("The app is already installed and running as a standalone window!");
+    } else if (isIOS) {
+      alert("On iOS, please tap the 'Share' button below and select 'Add to Home Screen' to install.");
+    } else {
+      alert("The browser hasn't cleared the app for installation yet. Make sure you aren't in Incognito mode and that the site is fully loaded!");
+    }
+  };
+
+  // Guard removed: The button will always render now
+  return (
+    <button
+      onClick={handleInstall}
+      className="flex-1 bg-emerald-600 text-white font-black uppercase tracking-widest text-xs py-5 rounded-2xl hover:bg-emerald-500 transition-all shadow-xl shadow-emerald-600/20 flex items-center justify-center gap-3 group"
+      style={{ backgroundImage: "linear-gradient(180deg, #10b981 0%, #059669 100%)" }}
+    >
+      <Download size={16} className="group-hover:scale-110 transition-transform" />
+      Install App
+    </button>
+  );
+}
+
+// --- 2. THE STATUS DISPLAY COMPONENT ---
 const damGradeExplanations: Record<string, string> = {
   "1: Hazardous": "Toxic or completely choked by weeds. Unsafe for humans, animals, and boats.",
   "2: Critical": "Severe pollution and thick green coverage. Bad smells and highly unsafe for recreation.",
@@ -35,7 +94,6 @@ export const StatusDisplay: React.FC = () => {
   const [aiMessage, setAiMessage] = useState<string>("Hi! I'm just checking the sensors for you...");
   const [isSystemOnline, setIsSystemOnline] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadSystemData = async () => {
@@ -69,7 +127,6 @@ export const StatusDisplay: React.FC = () => {
       } catch (err) {
         console.error("Connection Error:", err);
         setIsSystemOnline(false);
-        setError("Systems Offline");
         setAiMessage("Oh no! It looks like my connection to the dam is currently down. My systems are offline for a moment, but we're working hard to get the satellite link back up for you!");
       } finally {
         setIsLoading(false);
@@ -90,7 +147,6 @@ export const StatusDisplay: React.FC = () => {
   return (
     <div className="relative w-full max-w-6xl mx-auto px-4 bg-transparent font-sans">
       
-      {/* Background Glow */}
       {isSystemOnline && (
         <div className={`absolute inset-0 blur-[100px] opacity-10 rounded-full transition-colors duration-1000 ${
           isSafe ? 'bg-emerald-500' : isDangerous ? 'bg-rose-500' : 'bg-amber-500'
@@ -100,7 +156,6 @@ export const StatusDisplay: React.FC = () => {
       <div className="relative bg-white border border-slate-200 rounded-[2.5rem] md:rounded-[4rem] shadow-2xl overflow-hidden transition-all duration-700">
         <div className="flex flex-col lg:flex-row">
           
-          {/* Gauge Panel */}
           <div className={`w-full lg:w-1/3 p-8 md:p-12 flex flex-col items-center justify-center border-b lg:border-b-0 lg:border-r border-slate-100 ${
             !isSystemOnline ? 'bg-slate-50' : isSafe ? 'bg-emerald-50/50' : isDangerous ? 'bg-rose-50/50' : 'bg-amber-50/50'
           }`}>
@@ -136,7 +191,6 @@ export const StatusDisplay: React.FC = () => {
             )}
           </div>
 
-          {/* Information Panel */}
           <div className="w-full lg:w-2/3 p-8 md:p-12 space-y-8 bg-white">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-1 text-center lg:text-left">
@@ -147,7 +201,6 @@ export const StatusDisplay: React.FC = () => {
               </div>
             </div>
 
-            {/* AI Assistant Chatbox */}
             <div className="relative group">
               <div className={`absolute -top-3 -left-2 p-2 rounded-lg shadow-lg z-10 text-white ${isSystemOnline ? 'bg-emerald-600' : 'bg-slate-500'}`}>
                 <Sparkles size={16} />
@@ -166,7 +219,6 @@ export const StatusDisplay: React.FC = () => {
               </div>
             </div>
 
-            {/* Telemetry Statistics */}
             {isSystemOnline && (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5 animate-in fade-in slide-in-from-bottom-2 duration-500">
                 <StatusBadge icon={ShieldCheck} label="Swimming" status={view.swimSafety} color={isSafe ? 'emerald' : 'rose'} />
@@ -175,14 +227,17 @@ export const StatusDisplay: React.FC = () => {
               </div>
             )}
 
-            {/* Navigation Controls */}
             <div className="pt-4 flex flex-col sm:flex-row gap-4">
-              <Link href="/analytics" className="flex-1 bg-slate-900 text-white font-black uppercase tracking-widest text-xs py-5 rounded-2xl hover:bg-emerald-600 transition-all shadow-xl flex items-center justify-center gap-3 group">
+              <Link href="/analytics" className="flex-1 bg-slate-900 text-white font-black uppercase tracking-widest text-xs py-5 rounded-2xl hover:bg-slate-800 transition-all shadow-xl flex items-center justify-center gap-3 group">
                 Enter Analytics Center
                 <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
               </Link>
+
+              {/* ALWAYS VISIBLE INSTALL BUTTON */}
+              <InstallButton />
+
               {!isSystemOnline && (
-                 <button onClick={() => window.location.reload()} className="px-10 py-5 border-2 border-slate-200 text-slate-400 font-black uppercase text-[10px] tracking-widest rounded-2xl hover:bg-slate-50 transition-colors">
+                 <button onClick={() => window.location.reload()} className="flex-1 border-2 border-slate-200 text-slate-400 font-black uppercase text-xs tracking-widest rounded-2xl hover:bg-slate-50 transition-colors py-5">
                    Try Reconnecting
                  </button>
               )}
@@ -195,8 +250,7 @@ export const StatusDisplay: React.FC = () => {
   );
 };
 
-{/* Sub-Components */}
-
+// --- SUB-COMPONENTS ---
 const StatusBadge = ({ icon: Icon, label, status, color }: any) => (
   <div className="flex items-center gap-3 md:gap-4 bg-slate-50 px-5 py-4 rounded-2xl border border-slate-100 shadow-sm">
     <Icon size={20} className="text-slate-400 shrink-0" />
@@ -211,15 +265,5 @@ const LoadingHUD = () => (
   <div className="w-full h-80 flex flex-col items-center justify-center bg-white/50 backdrop-blur-md rounded-[3rem] border border-slate-200 shadow-inner">
     <RefreshCw className="animate-spin text-emerald-500 mb-4" size={40} />
     <p className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-400 animate-pulse text-center px-6">Initializing Intelligence Link...</p>
-  </div>
-);
-
-const ErrorHUD = ({ message }: { message: string }) => (
-  <div className="w-full p-8 md:p-12 bg-white border border-rose-100 rounded-[3rem] text-center space-y-6 shadow-2xl">
-    <WifiOff size={48} className="text-rose-500 mx-auto" />
-    <p className="text-sm md:text-lg font-medium text-slate-600 italic leading-relaxed max-w-md mx-auto">"{message}"</p>
-    <button onClick={() => window.location.reload()} className="px-10 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-rose-600 transition-colors shadow-xl">
-      Manual Override Link
-    </button>
   </div>
 );

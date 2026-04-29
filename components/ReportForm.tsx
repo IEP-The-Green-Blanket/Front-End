@@ -149,36 +149,37 @@ const ReportForm: React.FC = () => {
               <form onSubmit={(e) => { e.preventDefault(); if(formValidator()) setIsReviewing(true); }} className="space-y-8">
                 
                 <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Row 1: Name and Email */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2 px-1">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2 px-1 h-4">
                         <User size={12} className="text-emerald-500" /> Who is reporting?
                       </label>
                       <SmartField id="nameInput" label="Full Name" value={name} onChange={setName} placeholder_text="e.g. Jane Doe" error={nameError === "*" ? null : nameError} />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2 px-1">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2 px-1 h-4">
                         <Mail size={12} className="text-emerald-500" /> Where can we reach you?
                       </label>
                       <SmartField id="mailInput" label="Email Address" type="email" value={email} onChange={setEmail} placeholder_text="e.g. jane@example.com" error={mailError === "*" ? null : mailError} />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Row 2: Location and Issue Type */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center justify-between px-1">
-                        <span className="flex items-center gap-2">
+                      <div className="flex items-center justify-between px-1 h-4">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
                           <MapPin size={12} className="text-emerald-500" /> Where did you see this?
-                        </span>
+                        </label>
                         <button 
                           type="button" 
                           onClick={() => setShowMapModal(true)}
-                          className="flex items-center gap-1 text-emerald-600 hover:text-emerald-500 bg-emerald-50 hover:bg-emerald-100 px-2 py-1 rounded-md transition-colors shadow-sm border border-emerald-100"
+                          className="flex items-center gap-1 text-emerald-600 hover:text-emerald-500 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-md transition-colors border border-emerald-100"
                         >
-                          <MapIcon size={10} /> <span className="tracking-widest">Open Map</span>
+                          <MapIcon size={10} /> <span className="text-[9px] font-black uppercase tracking-widest">Open Map</span>
                         </button>
-                      </label>
-
+                      </div>
                       <SmartField id="locationInput" label="Location" category="select" value={location} onChange={setLocation} error={locationError === "*" ? null : locationError} options={
                         <>
                           <option value="">-- Choose a location --</option>
@@ -187,7 +188,7 @@ const ReportForm: React.FC = () => {
                       } />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2 px-1">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2 px-1 h-4">
                         <AlertCircle size={12} className="text-emerald-500" /> What is the issue?
                       </label>
                       <SmartField id="reportingCategory" label="Issue Type" category="select" value={reportType} onChange={setReportType} error={reportTypeError === "*" ? null : reportTypeError} options={
@@ -199,13 +200,15 @@ const ReportForm: React.FC = () => {
                     </div>
                   </div>
 
+                  {/* Conditional Row: Other Category */}
                   {reportType === ReportSubject.other && (
                     <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">What kind of issue?</label>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Specify Issue</label>
                       <SmartField id="extraInfo" label="Other Category" value={otherCategory} onChange={setOtherCategory} placeholder_text="Briefly name the issue..." error={null} />
                     </div>
                   )}
 
+                  {/* Row 3: Extra Details */}
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2 px-1">
                       <FileText size={12} className="text-emerald-500" /> Extra Details
@@ -299,7 +302,6 @@ const ReviewRow = ({ label, value }: { label: string, value: string }) => (
   </div>
 );
 
-// --- REBUILT HIGH-FIDELITY POLYGON MAP MODAL ---
 const InteractiveMapModal = ({ onClose, onSelectLocation }: { onClose: () => void, onSelectLocation: (loc: string) => void }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
@@ -318,75 +320,70 @@ const InteractiveMapModal = ({ onClose, onSelectLocation }: { onClose: () => voi
         <div className="p-6 bg-slate-100 relative overflow-x-auto custom-scrollbar flex justify-center items-center">
           
           <svg viewBox="0 0 1000 600" className="w-full min-w-[700px] h-auto drop-shadow-xl rounded-2xl bg-white border border-slate-200 p-4">
-            {/* These 10 polygons fit together perfectly with no gaps.
-              The stroke defines crisp, clean borders.
-              The colors shift through slightly different hues of teals, blues, and emeralds.
-            */}
-
-            {/* Zone 1: Far West Inlet */}
+            {/* Zone 1 */}
             <g className="cursor-pointer group" onClick={() => onSelectLocation(Object.values(ReportLocations)[0] || "Zone 1: Far West")}>
               <polygon points="80,340 150,310 230,320 230,370 150,380" 
                        className="fill-[#0d9488] stroke-white stroke-[3px] stroke-linejoin-round group-hover:fill-[#14b8a6] transition-colors" />
               <text x="160" y="350" className="text-[12px] font-black uppercase fill-white pointer-events-none drop-shadow-md" textAnchor="middle">Zone 1</text>
             </g>
 
-            {/* Zone 2: West Lake / Heron Cove */}
+            {/* Zone 2 */}
             <g className="cursor-pointer group" onClick={() => onSelectLocation(Object.values(ReportLocations)[1] || "Zone 2: West Lake")}>
               <polygon points="230,320 320,320 340,380 360,400 230,370" 
                        className="fill-[#14b8a6] stroke-white stroke-[3px] stroke-linejoin-round group-hover:fill-[#2dd4bf] transition-colors" />
               <text x="290" y="365" className="text-[12px] font-black uppercase fill-white pointer-events-none drop-shadow-md" textAnchor="middle">Zone 2</text>
             </g>
 
-            {/* Zone 3: Kosmos / North West */}
+            {/* Zone 3 */}
             <g className="cursor-pointer group" onClick={() => onSelectLocation(Object.values(ReportLocations)[2] || "Zone 3: Kosmos")}>
               <polygon points="320,320 390,260 460,270 420,340 340,380" 
                        className="fill-[#2dd4bf] stroke-white stroke-[3px] stroke-linejoin-round group-hover:fill-[#5eead4] transition-colors" />
               <text x="390" y="315" className="text-[12px] font-black uppercase fill-white pointer-events-none drop-shadow-md" textAnchor="middle">Zone 3</text>
             </g>
 
-            {/* Zone 4: Dam Wall (North Tip) */}
+            {/* Zone 4 */}
             <g className="cursor-pointer group" onClick={() => onSelectLocation(Object.values(ReportLocations)[3] || "Zone 4: Dam Wall")}>
               <polygon points="390,260 480,140 530,160 500,240 460,270" 
                        className="fill-[#0f766e] stroke-white stroke-[3px] stroke-linejoin-round group-hover:fill-[#115e59] transition-colors" />
               <text x="480" y="215" className="text-[12px] font-black uppercase fill-white pointer-events-none drop-shadow-md" textAnchor="middle">Zone 4</text>
             </g>
 
-            {/* Zone 5: Schoemansville */}
+            {/* Zone 5 */}
             <g className="cursor-pointer group" onClick={() => onSelectLocation(Object.values(ReportLocations)[4] || "Zone 5: Schoemansville")}>
               <polygon points="500,240 530,160 660,180 720,240 640,290 560,270" 
                        className="fill-[#0e7490] stroke-white stroke-[3px] stroke-linejoin-round group-hover:fill-[#0891b2] transition-colors" />
               <text x="600" y="235" className="text-[12px] font-black uppercase fill-white pointer-events-none drop-shadow-md" textAnchor="middle">Zone 5</text>
             </g>
 
-            {/* Zone 6: Main Basin */}
+            {/* Zone 6 */}
             <g className="cursor-pointer group" onClick={() => onSelectLocation(Object.values(ReportLocations)[5] || "Zone 6: Main Basin")}>
               <polygon points="460,270 500,240 560,270 640,290 680,360 580,400 480,410 420,340" 
                        className="fill-[#0891b2] stroke-white stroke-[3px] stroke-linejoin-round group-hover:fill-[#06b6d4] transition-colors" />
               <text x="540" y="325" className="text-[12px] font-black uppercase fill-white pointer-events-none drop-shadow-md" textAnchor="middle">Zone 6</text>
             </g>
 
-            {/* Zone 7: Pecanwood */}
+            {/* Zone 7 */}
             <g className="cursor-pointer group" onClick={() => onSelectLocation(Object.values(ReportLocations)[6] || "Zone 7: Pecanwood")}>
               <polygon points="420,340 480,410 460,490 380,460 360,400 340,380" 
                        className="fill-[#06b6d4] stroke-white stroke-[3px] stroke-linejoin-round group-hover:fill-[#22d3ee] transition-colors" />
               <text x="420" y="425" className="text-[12px] font-black uppercase fill-white pointer-events-none drop-shadow-md" textAnchor="middle">Zone 7</text>
             </g>
 
-            {/* Zone 8: Eagles Landing */}
+            {/* Zone 8 */}
             <g className="cursor-pointer group" onClick={() => onSelectLocation(Object.values(ReportLocations)[7] || "Zone 8: Eagles Landing")}>
               <polygon points="480,410 580,400 740,420 660,460 460,490" 
                        className="fill-[#22d3ee] stroke-white stroke-[3px] stroke-linejoin-round group-hover:fill-[#67e8f9] transition-colors" />
               <text x="580" y="450" className="text-[12px] font-black uppercase fill-white pointer-events-none drop-shadow-md" textAnchor="middle">Zone 8</text>
             </g>
 
-            {/* Zone 9: Ifafi */}
+            {/* Zone 9 */}
             <g className="cursor-pointer group" onClick={() => onSelectLocation(Object.values(ReportLocations)[8] || "Zone 9: Ifafi")}>
               <polygon points="640,290 720,240 840,280 880,340 800,390 680,360" 
                        className="fill-[#059669] stroke-white stroke-[3px] stroke-linejoin-round group-hover:fill-[#10b981] transition-colors" />
               <text x="760" y="320" className="text-[12px] font-black uppercase fill-white pointer-events-none drop-shadow-md" textAnchor="middle">Zone 9</text>
             </g>
 
-            {/* Zone 10: Crocodile River Inlet */}
+            {/* Zone 10 */}
             <g className="cursor-pointer group" onClick={() => onSelectLocation(Object.values(ReportLocations)[9] || "Zone 10: Crocodile River")}>
               <polygon points="680,360 800,390 880,340 920,480 960,540 880,560 820,480 740,420 580,400" 
                        className="fill-[#10b981] stroke-white stroke-[3px] stroke-linejoin-round group-hover:fill-[#34d399] transition-colors" />
