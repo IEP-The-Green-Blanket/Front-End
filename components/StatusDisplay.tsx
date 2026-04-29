@@ -159,7 +159,7 @@ export const StatusDisplay: React.FC = () => {
 
             <div className="pt-4 flex flex-col sm:flex-row gap-4">
               <Link href="/analytics" className="flex-1 bg-slate-900 text-white font-black uppercase tracking-widest text-xs py-5 rounded-2xl hover:bg-emerald-600 transition-all shadow-xl flex items-center justify-center gap-3 group">
-                Enter Command Center
+                Enter Analytics Center
                 <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
               </Link>
               {!isSystemOnline && (

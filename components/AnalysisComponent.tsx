@@ -16,6 +16,7 @@ import {
   ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell
 } from 'recharts';
+import Link from "next/link";
 
 export const AnalysisComponent: React.FC = () => {
   const [activeTab, setActiveTab] = useState("tourist");
@@ -123,7 +124,7 @@ export const AnalysisComponent: React.FC = () => {
             <div className="flex items-center gap-3">
                <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-slate-900 uppercase italic">
-                Harties <span className="text-emerald-600 font-normal">Command Center</span>
+                Green <span className="text-emerald-600 font-normal">Analytics Engine</span>
               </h1>
             </div>
             <div className="flex flex-wrap items-center gap-3 md:gap-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
@@ -405,9 +406,11 @@ const ResidentModule = ({ data }: any) => {
           <h4 className="text-[10px] font-black uppercase text-emerald-400 tracking-[0.2em] mb-4 flex items-center gap-2 relative z-10"><Camera size={14} /> Community Action</h4>
           <h3 className="text-2xl font-black italic tracking-tighter mb-4 relative z-10">See an algae bloom or raw sewage leak?</h3>
           <p className="text-sm text-slate-400 font-medium leading-relaxed mb-8 relative z-10">Your field reports feed directly into our analytical engine. Snap a photo and alert the response team immediately.</p>
-          <button className="mt-auto bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase text-xs tracking-widest py-4 px-6 rounded-2xl transition-all shadow-lg shadow-emerald-500/20 relative z-10 flex items-center justify-between group">
+          <Link href="/reporting" className="mt-auto bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase text-xs tracking-widest py-4 px-6 rounded-2xl transition-all shadow-lg shadow-emerald-500/20 relative z-10 flex items-center justify-between group">
+            <button className="mt-auto bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase text-xs tracking-widest py-4 px-6 rounded-2xl transition-all shadow-lg shadow-emerald-500/20 relative z-10 flex items-center justify-between group">
             File Field Report <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
           </button>
+          </Link>
         </div>
       </div>
     </div>
