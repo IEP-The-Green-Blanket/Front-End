@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { MessageSquare, Send, Bot, User, Sparkles, AlertCircle } from "lucide-react";
+import { Bot, Send, User, Sparkles } from "lucide-react";
 
 export default function ChatbotComponent() {
   const [messages, setMessages] = useState<{ text: string; sender: "user" | "bot" }[]>([]);
@@ -19,7 +19,6 @@ export default function ChatbotComponent() {
     setIsTyping(true);
 
     try {
-      // NOTE: Added "/ask" to the endpoint based on your CORS logs showing a 404 at the base route.
       const res = await fetch("http://localhost:5000/api/Chatbot/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -40,7 +39,7 @@ export default function ChatbotComponent() {
         { 
           text: err.message === "404" 
             ? "CRITICAL: Intelligence Endpoint (/api/Chatbot/ask) not found. Verify backend routing." 
-            : "ERROR: Failed to establish uplink with Harties Intelligence Engine.", 
+            : "ERROR: Failed to establish uplink with Intelligence Engine.", 
           sender: "bot" 
         },
       ]);
@@ -53,190 +52,88 @@ export default function ChatbotComponent() {
   }, [messages]);
 
   return (
-    <div style={{ 
-      padding: "40px 20px", 
-      textAlign: "center", 
-      minHeight: "100vh",
-      background: "transparent"
-    }}>
+    <div className="w-full flex flex-col items-center pt-1 pb-24 px-4 sm:px-6 font-sans">
       
-      {/* HEADER: Technical Intelligence Style */}
-      <div style={{ marginBottom: "40px" }}>
-        <h1 style={{ 
-          fontSize: "14px", 
-          fontWeight: 900, 
-          fontStyle: "italic", 
-          textTransform: "uppercase", 
-          letterSpacing: "0.3em", 
-          color: "#10b981", // Emerald-500
-          marginBottom: "8px"
-        }}>
+      {/* HEADER */}
+      <div className="w-full max-w-4xl text-center mb-1.5">
+        {/* FIX: Added 'hidden md:block' to hide on mobile but keep on desktop */}
+        <h1 className="hidden md:block text-[10px] font-black italic uppercase tracking-[0.2em] text-emerald-600 mb-0">
           Environmental Intelligence Engine
         </h1>
-        <h2 style={{ 
-          fontSize: "42px", 
-          fontWeight: 900, 
-          color: "#0f172a", // Slate-900
-          letterSpacing: "-0.03em",
-          textTransform: "uppercase"
-        }}>
+        <h2 className="text-lg md:text-xl font-black text-slate-900 tracking-tighter uppercase leading-tight mt-1 md:mt-0">
           Chatbot Assistant
         </h2>
       </div>
 
-      {/* CHAT CONTAINER: Glassmorphism / Shadow-2xl */}
-      <div style={{
-          maxWidth: "800px",
-          margin: "0 auto",
-          background: "rgba(255, 255, 255, 0.85)", 
-          backdropFilter: "blur(16px)", 
-          borderRadius: "2.5rem", 
-          padding: "35px",
-          height: "650px",
-          display: "flex",
-          flexDirection: "column",
-          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)", 
-          border: "2px solid #0f172a" // Brutalist High-Contrast Border
-        }}
-      >
+      {/* CHAT CONTAINER */}
+      <div className="w-full max-w-4xl bg-white/95 backdrop-blur-md rounded-[2rem] p-3 flex flex-col shadow-lg border-2 border-slate-900 h-[calc(100dvh-230px)] min-h-[350px]">
+        
         {/* MESSAGES AREA */}
-        <div style={{
-            flex: 1,
-            overflowY: "auto",
-            paddingRight: "15px",
-            display: "flex",
-            flexDirection: "column",
-            gap: "20px"
-          }}
-        >
+        <div className="flex-1 overflow-y-auto pr-2 flex flex-col gap-3 scroll-smooth custom-scrollbar">
+          
+          {/* EMPTY STATE */}
           {messages.length === 0 && (
-            <div style={{ marginTop: "120px", opacity: 0.6 }}>
-                <Sparkles style={{ margin: "0 auto 15px", color: "#10b981" }} size={40} />
-                <p style={{ 
-                  color: "#475569", 
-                  fontSize: "13px", 
-                  fontWeight: 900, 
-                  textTransform: "uppercase", 
-                  letterSpacing: "0.15em" 
-                }}>
-                    Awaiting Ingestion Inquiry... <br />
-                    <span style={{ fontStyle: "italic", color: "#10b981" }}>"Can I swim in the dam today?"</span>
-                </p>
+            <div className="m-auto text-center opacity-60 px-2">
+              <Sparkles className="mx-auto mb-2 text-emerald-500 w-8 h-8" />
+              <p className="text-slate-600 text-[10px] md:text-xs font-black uppercase tracking-[0.1em] leading-relaxed">
+                Awaiting Ingestion Inquiry... <br />
+                <span className="italic text-emerald-500 mt-1 block">"Can I swim in the dam today?"</span>
+              </p>
             </div>
           )}
 
+          {/* MESSAGE BUBBLES */}
           {messages.map((msg, index) => (
-            <div key={index} style={{
-                display: "flex",
-                justifyContent: msg.sender === "user" ? "flex-end" : "flex-start",
-                alignItems: "flex-end",
-                gap: "12px"
-              }}
+            <div 
+              key={index} 
+              className={`flex items-end gap-2 ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
             >
               {msg.sender === "bot" && (
-                <div style={{ background: "#0f172a", padding: "8px", borderRadius: "12px", color: "#10b981" }}>
-                  <Bot size={18} />
+                <div className="hidden sm:flex bg-slate-900 p-2 rounded-xl text-emerald-500 shrink-0">
+                  <Bot size={16} />
                 </div>
               )}
               
-              <div style={{
-                  padding: "16px 24px",
-                  borderRadius: msg.sender === "user" ? "24px 24px 4px 24px" : "24px 24px 24px 4px",
-                  background: msg.sender === "user" ? "#10b981" : "#f1f5f9", 
-                  color: msg.sender === "user" ? "white" : "#0f172a",
-                  maxWidth: "80%",
-                  fontSize: "15px",
-                  fontWeight: msg.sender === "user" ? 700 : 500,
-                  lineHeight: "1.6",
-                  textAlign: "left",
-                  boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-                  border: msg.sender === "bot" ? "1px solid #e2e8f0" : "none"
-                }}
+              <div 
+                className={`px-3 py-2.5 max-w-[90%] sm:max-w-[85%] text-[13px] leading-relaxed shadow-sm ${
+                  msg.sender === "user" 
+                    ? "bg-emerald-500 text-white rounded-2xl rounded-br-sm font-bold" 
+                    : "bg-slate-100 text-slate-900 rounded-2xl rounded-bl-sm font-medium border border-slate-200"
+                }`}
               >
                 {msg.text}
               </div>
-
-              {msg.sender === "user" && (
-                <div style={{ background: "#10b981", padding: "8px", borderRadius: "12px", color: "white" }}>
-                  <User size={18} />
-                </div>
-              )}
             </div>
           ))}
 
+          {/* TYPING INDICATOR */}
           {isTyping && (
-            <div style={{ display: "flex", justifyContent: "flex-start", gap: "12px", alignItems: "center" }}>
-                <div style={{ background: "#0f172a", padding: "8px", borderRadius: "12px", color: "#10b981" }}>
-                  <Bot size={18} />
-                </div>
-                <div style={{ 
-                  padding: "12px 20px", 
-                  borderRadius: "20px", 
-                  background: "#f1f5f9", 
-                  color: "#64748b", 
-                  fontSize: "12px",
-                  fontWeight: 900,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.1em"
-                }}>
-                   Analyzing Telemetry...
-                </div>
+            <div className="flex items-center gap-2 justify-start">
+              <div className="px-4 py-2.5 rounded-2xl rounded-bl-sm bg-slate-100 text-slate-500 text-[10px] font-black uppercase tracking-[0.1em] border border-slate-200">
+                Analyzing Telemetry...
+              </div>
             </div>
           )}
 
           <div ref={messagesEndRef} />
         </div>
 
-        {/* INPUT: Industrial UI Style */}
-        <div style={{
-            display: "flex",
-            gap: "15px",
-            marginTop: "30px",
-            padding: "12px",
-            background: "#f8fafc",
-            borderRadius: "1.75rem",
-            border: "2px solid #0f172a",
-            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)"
-          }}
-        >
+        {/* INPUT AREA */}
+        <div className="mt-3 p-1.5 bg-slate-50 rounded-2xl border-2 border-slate-900 flex items-center gap-2 shrink-0">
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-            placeholder="Query the Green Blanket Intelligence..."
-            style={{
-              flex: 1,
-              background: "transparent",
-              border: "none",
-              outline: "none",
-              fontSize: "16px",
-              fontWeight: 700,
-              color: "#0f172a",
-              paddingLeft: "15px"
-            }}
+            placeholder="Query Intelligence..."
+            className="flex-1 bg-transparent border-none outline-none text-sm font-bold text-slate-900 px-3 placeholder:text-slate-400 placeholder:font-medium w-full"
           />
 
           <button
             onClick={sendMessage}
             disabled={isTyping}
-            style={{
-                width: "54px",
-                height: "54px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: "#0f172a", 
-                color: "#10b981",
-                border: "none",
-                borderRadius: "16px",
-                cursor: isTyping ? "not-allowed" : "pointer",
-                transition: "transform 0.1s ease",
-                boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.2)"
-            }}
-            onMouseDown={(e) => e.currentTarget.style.transform = "scale(0.95)"}
-            onMouseUp={(e) => e.currentTarget.style.transform = "scale(1)"}
+            className="w-10 h-10 flex items-center justify-center bg-slate-900 text-emerald-500 rounded-xl shrink-0 transition-transform active:scale-90 disabled:opacity-50"
           >
-            {isTyping ? <Bot className="animate-pulse" /> : <Send size={24} />}
+            {isTyping ? <Bot className="animate-pulse w-4 h-4" /> : <Send className="w-4 h-4 ml-0.5" />}
           </button>
         </div>
       </div>
