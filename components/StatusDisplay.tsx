@@ -50,7 +50,13 @@ export const StatusDisplay: React.FC<StatusDisplayProps> = ({ data, isLoading, l
       try {
         const promptText = `You are the Green Blanket live status assistant. The current water health score is ${score} out of 100 (${view.healthGrade}). Write a friendly, conversational 2-sentence status update for a tourist. Mention the score and reassure them that our systems are online and monitoring the water continuously. Do not use generic AI intros like 'Hello there'.`;
 
-        const aiResponse = await fetch("http://localhost:5000/api/Chatbot/ask", {
+        // DEV UPLINK LOGIC: Priority order for API URL
+        const baseUrl = 
+          process.env.NEXT_PUBLIC_API_URL || 
+          process.env.NEXT_PUBLIC_URL || 
+          "https://localhost:7166";
+
+        const aiResponse = await fetch(`${baseUrl}/api/Chatbot/ask`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ message: promptText })

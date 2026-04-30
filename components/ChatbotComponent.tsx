@@ -15,17 +15,21 @@ export default function ChatbotComponent() {
     const userMessage = { text: input, sender: "user" as const };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
-
     setIsTyping(true);
 
     try {
-      const res = await fetch("http://localhost:5000/api/Chatbot/ask", {
+      const baseUrl = 
+        process.env.NEXT_PUBLIC_API_URL || 
+        process.env.NEXT_PUBLIC_URL || 
+        "https://localhost:7166";
+      
+      const res = await fetch(`${baseUrl}/api/Chatbot/ask`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: input }),
       });
 
-      if (res.status === 404) throw new Error("404");
+      if (!res.ok) throw new Error(`${res.status}`);
 
       const data = await res.json();
 
@@ -38,13 +42,14 @@ export default function ChatbotComponent() {
         ...prev,
         { 
           text: err.message === "404" 
-            ? "CRITICAL: Intelligence Endpoint (/api/Chatbot/ask) not found. Verify backend routing." 
-            : "ERROR: Failed to establish uplink with Intelligence Engine.", 
+            ? "CRITICAL: Intelligence Endpoint (/api/Chatbot/ask) not found. Verify your C# controller routing." 
+            : `ERROR: Failed to establish uplink with ${process.env.NEXT_PUBLIC_URL || "https://localhost:7166"}. Ensure backend is running.`, 
           sender: "bot" 
         },
       ]);
+    } finally {
+      setIsTyping(false);
     }
-    setIsTyping(false);
   };
 
   useEffect(() => {
@@ -56,7 +61,6 @@ export default function ChatbotComponent() {
       
       {/* HEADER */}
       <div className="w-full max-w-4xl text-center mb-1.5">
-        {/* FIX: Added 'hidden md:block' to hide on mobile but keep on desktop */}
         <h1 className="hidden md:block text-[10px] font-black italic uppercase tracking-[0.2em] text-emerald-600 mb-0">
           Environmental Intelligence Engine
         </h1>
@@ -69,7 +73,7 @@ export default function ChatbotComponent() {
       <div className="w-full max-w-4xl bg-white/95 backdrop-blur-md rounded-[2rem] p-3 flex flex-col shadow-lg border-2 border-slate-900 h-[calc(100dvh-230px)] min-h-[350px]">
         
         {/* MESSAGES AREA */}
-        <div className="flex-1 overflow-y-auto pr-2 flex flex-col gap-3 scroll-smooth custom-scrollbar">
+        <div className="flex-1 overflow-y-auto pr-2 flex flex-col gap-3 scroll-smooth custom-scrollbar text-slate-900">
           
           {/* EMPTY STATE */}
           {messages.length === 0 && (

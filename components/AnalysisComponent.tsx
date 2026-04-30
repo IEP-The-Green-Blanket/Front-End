@@ -21,107 +21,120 @@ import Link from "next/link";
 export const AnalysisComponent: React.FC = () => {
   const [activeTab, setActiveTab] = useState("tourist");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<any>({
+    omni: null, chatbot: null, history: null, bloom: null,
+    forensic: null, progress: null, irrigation: null, 
+    infra: null, eco: null, compliance: null, audit: null, auditHistory: null
+  });
   const [isLoading, setIsLoading] = useState(true);
+  const [isTabLoading, setIsTabLoading] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const [isOmniLoading, setIsOmniLoading] = useState(false);
-  const [isAuditLoading, setIsAuditLoading] = useState(false);
-
+  
   const [communityReports, setCommunityReports] = useState<any[]>([]);
-
   const [omniDateRange, setOmniDateRange] = useState({ start: "2026-02-01", end: "2026-04-30" });
   const [auditDateRange, setAuditDateRange] = useState({ start: "2026-02-01", end: "2026-04-30" });
 
+  // 1. Initial Load: Fetch only the "Core" data (Performance Guard)
   useEffect(() => {
     setIsMounted(true);
-    const checkAuth = () => {
-      const user = localStorage.getItem("loginName") || localStorage.getItem("token");
-      if (user) setIsAuthenticated(true);
-    };
-    checkAuth();
+    const user = localStorage.getItem("loginName") || localStorage.getItem("token");
+    if (user) setIsAuthenticated(true);
 
-    const fetchTelemetry = async () => {
+    const loadCoreData = async () => {
       setIsLoading(true);
       try {
-        const results = await Promise.all([
-          analysisService.getOmniDashboard(),             
-          analysisService.getForensicAttribution(),       
-          analysisService.getRemediationProgress(),       
-          analysisService.getBloomForecast(),             
-          analysisService.getIrrigationSafety(),          
-          analysisService.getInfrastructureRisk(),        
-          analysisService.getHarvestValue(),              
-          analysisService.getComplianceStatus(),          
-          (analysisService as any).getMasterAudit(auditDateRange.start, auditDateRange.end), 
-          analysisService.getHistoryRange(omniDateRange.start, omniDateRange.end),           
-          analysisService.getChatbotSummary(),            
-          analysisService.getHistoryRange(auditDateRange.start, auditDateRange.end)          
+        const [omni, chatbot, bloom, history] = await Promise.all([
+          analysisService.getOmniDashboard(),
+          analysisService.getChatbotSummary(),
+          analysisService.getBloomForecast(),
+          analysisService.getHistoryRange(omniDateRange.start, omniDateRange.end)
         ]);
         
-        setData({
-          omni: results[0], forensic: results[1], progress: results[2],
-          bloom: results[3], irrigation: results[4], infra: results[5],
-          eco: results[6], compliance: results[7], audit: results[8],
-          history: results[9], chatbot: results[10], auditHistory: results[11] 
-        });
-
-        // Load reports using unified service
-        fetchReports();
-
+        setData((prev: any) => ({ ...prev, omni, chatbot, bloom, history }));
       } catch (err) {
-        console.error("Uplink Error:", err);
+        console.error("Core Uplink Error:", err);
       } finally {
         setIsLoading(false);
       }
     };
-    fetchTelemetry();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    loadCoreData();
   }, []);
 
-  // --- UNIFIED FETCH FUNCTION ---
-  const fetchReports = async () => {
-    try {
-      const reportsData = await analysisService.getReports();
-      setCommunityReports(reportsData);
-    } catch (err) {
-      console.error("Failed to load community reports:", err);
-    }
-  };
+  // 2. Lazy Loading: Fetch tab-specific data only when active
+  useEffect(() => {
+    if (!isMounted || isLoading) return;
+
+    const loadTabData = async () => {
+      try {
+        if (activeTab === "science" && !data.forensic) {
+          setIsTabLoading(true);
+          const [forensic, progress] = await Promise.all([
+            analysisService.getForensicAttribution(),
+            analysisService.getRemediationProgress()
+          ]);
+          setData((prev: any) => ({ ...prev, forensic, progress }));
+        }
+        
+        if (activeTab === "agri" && !data.irrigation) {
+          setIsTabLoading(true);
+          const [irrigation, infra, eco, compliance] = await Promise.all([
+            analysisService.getIrrigationSafety(),
+            analysisService.getInfrastructureRisk(),
+            analysisService.getHarvestValue(),
+            analysisService.getComplianceStatus()
+          ]);
+          setData((prev: any) => ({ ...prev, irrigation, infra, eco, compliance }));
+        }
+
+        if (activeTab === "audit" && !data.audit) {
+          setIsTabLoading(true);
+          const [audit, auditHistory, reports] = await Promise.all([
+            (analysisService as any).getMasterAudit(auditDateRange.start, auditDateRange.end),
+            analysisService.getHistoryRange(auditDateRange.start, auditDateRange.end),
+            analysisService.getReports()
+          ]);
+          setData((prev: any) => ({ ...prev, audit, auditHistory }));
+          setCommunityReports(reports);
+        }
+      } catch (err) {
+        console.error(`Lazy Load Error (${activeTab}):`, err);
+      } finally {
+        setIsTabLoading(false);
+      }
+    };
+
+    loadTabData();
+  }, [activeTab, isMounted, isLoading]);
 
   const handleUpdateOmniGraph = async () => {
-    if (!data) return;
-    setIsOmniLoading(true);
+    setIsTabLoading(true);
     try {
       const historyResult = await analysisService.getHistoryRange(omniDateRange.start, omniDateRange.end);
       setData((prev: any) => ({ ...prev, history: historyResult }));
     } catch (err) {
-      console.error("Omni Graph Update Error:", err);
+      console.error("Graph Update Error:", err);
     } finally {
-      setIsOmniLoading(false);
+      setIsTabLoading(false);
     }
   };
 
   const handleUpdateAudit = async () => {
-    if (!data) return;
-    setIsAuditLoading(true);
+    setIsTabLoading(true);
     try {
-      const [historyResult, auditStatsResult] = await Promise.all([
+      const [history, audit] = await Promise.all([
         analysisService.getHistoryRange(auditDateRange.start, auditDateRange.end),
         (analysisService as any).getMasterAudit(auditDateRange.start, auditDateRange.end)
       ]);
-      setData((prev: any) => ({ ...prev, auditHistory: historyResult, audit: auditStatsResult }));
-      
-      await fetchReports();
-      
+      setData((prev: any) => ({ ...prev, auditHistory: history, audit }));
     } catch (err) {
       console.error("Audit Update Error:", err);
     } finally {
-      setIsAuditLoading(false);
+      setIsTabLoading(false);
     }
   };
 
-  const omniChartData = useMemo(() => data?.history?.dataPoints || [], [data]);
-  const auditTableData = useMemo(() => data?.auditHistory?.dataPoints || [], [data]);
+  const omniChartData = useMemo(() => data.history?.dataPoints || [], [data.history]);
+  const auditTableData = useMemo(() => data.auditHistory?.dataPoints || [], [data.auditHistory]);
 
   const TABS = [
     { id: "overview", label: "Overview", icon: LayoutGrid, isPublic: false },
@@ -132,7 +145,7 @@ export const AnalysisComponent: React.FC = () => {
     { id: "audit", label: "Data Records", icon: Database, isPublic: false }
   ];
 
-  if (isLoading || !data) return <LoadingState />;
+  if (isLoading || !data.omni) return <LoadingState />;
 
   return (
     <div className="min-h-screen bg-transparent text-slate-900 font-sans selection:bg-emerald-100 pb-20">
@@ -165,11 +178,11 @@ export const AnalysisComponent: React.FC = () => {
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => !isLocked && setActiveTab(tab.id)}
                   className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all font-bold text-[11px] uppercase tracking-wider whitespace-nowrap snap-start ${
                     activeTab === tab.id 
                     ? "bg-slate-900 text-white shadow-lg translate-y-[-2px]" 
-                    : "text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                    : isLocked ? "text-slate-300 cursor-not-allowed" : "text-slate-400 hover:text-slate-600 hover:bg-slate-100"
                   }`}
                 >
                   <tab.icon size={14} /> {tab.label}
@@ -182,8 +195,8 @@ export const AnalysisComponent: React.FC = () => {
 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-900 text-white p-4 md:px-8 rounded-2xl md:rounded-[2rem] shadow-2xl gap-4 border-b-4 border-emerald-500">
           <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-emerald-400">
-            <RefreshCw size={14} className="animate-spin-slow shrink-0" />
-            <span className="truncate">Main Database Connection: Active</span>
+            {isTabLoading ? <RefreshCw size={14} className="animate-spin shrink-0" /> : <ShieldCheck size={14} className="shrink-0" />}
+            <span className="truncate">{isTabLoading ? "Syncing Environmental Data..." : "Main Database Connection: Active"}</span>
           </div>
           <div className="flex items-center gap-3 bg-slate-800 p-2.5 px-4 md:px-6 rounded-xl md:rounded-2xl border border-slate-700 w-full md:w-auto justify-between md:justify-start">
             <div className="flex items-center gap-2">
@@ -198,21 +211,21 @@ export const AnalysisComponent: React.FC = () => {
           {!isAuthenticated && activeTab !== "tourist" && <LockedState />}
           {isAuthenticated && activeTab === "overview" && <OverviewModule data={data} />}
           {isAuthenticated && activeTab === "resident" && <ResidentModule data={data} />}
-          {isAuthenticated && activeTab === "science" && (
+          {isAuthenticated && activeTab === "science" && data.forensic && (
             <ForensicsModule 
               data={data} chartData={omniChartData} dateRange={omniDateRange} 
               setDateRange={setOmniDateRange} isMounted={isMounted} 
-              isGraphLoading={isOmniLoading} onUpdateGraph={handleUpdateOmniGraph}
+              isGraphLoading={isTabLoading} onUpdateGraph={handleUpdateOmniGraph}
             />
           )}
-          {isAuthenticated && activeTab === "agri" && <AgriSafetyModule data={data} />}
-          {isAuthenticated && activeTab === "audit" && (
+          {isAuthenticated && activeTab === "agri" && data.irrigation && <AgriSafetyModule data={data} />}
+          {isAuthenticated && activeTab === "audit" && data.audit && (
             <AuditLogModule 
               data={data} 
               tableData={auditTableData} 
               dateRange={auditDateRange}
               setDateRange={setAuditDateRange} 
-              isAuditLoading={isAuditLoading}
+              isAuditLoading={isTabLoading}
               onUpdateAudit={handleUpdateAudit}
               communityReports={communityReports}
             />
@@ -233,9 +246,9 @@ const LockedState = () => (
     <p className="text-sm md:text-base text-slate-500 max-w-lg leading-relaxed font-medium mb-10">
       This area contains sensitive technical data and detailed records that are for authorized team members only. 
     </p>
-    <a href="/login" className="bg-slate-900 text-white font-black uppercase tracking-widest text-xs px-8 py-4 rounded-xl hover:bg-slate-800 transition-colors shadow-xl">
+    <Link href="/login" className="bg-slate-900 text-white font-black uppercase tracking-widest text-xs px-8 py-4 rounded-xl hover:bg-slate-800 transition-colors shadow-xl">
       Login to Dashboard
-    </a>
+    </Link>
   </div>
 );
 
@@ -243,11 +256,10 @@ const LockedState = () => (
 const TelemetryTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     const pt = payload[0].payload;
-    const safeDate = new Date(`${label}T00:00:00`); 
     return (
       <div className="bg-slate-900/95 backdrop-blur-md border border-slate-700 p-4 md:p-5 rounded-2xl shadow-2xl min-w-[180px] md:min-w-[200px]">
         <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-3 border-b border-slate-700 pb-2">
-          {safeDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+          {label}
         </p>
         <div className="space-y-2">
           <div className="flex justify-between items-center text-xs font-bold"><span className="text-slate-400">Nitrates:</span><span className="text-emerald-400">{pt.nitrates} mg/L</span></div>
@@ -271,7 +283,7 @@ const OverviewModule = ({ data }: any) => {
   };
   const ringColor = getWqiColor(wqiScore);
   const ringOffset = 440 - (wqiScore / 100) * 440;
-  const harvestValue = Number(data.eco?.marketValue?.estimatedHarvestValue || data.eco?.marketValueEstimate || data.eco?.marketValue || data.eco) || 0;
+  const harvestValue = Number(data.eco?.marketValue?.estimatedHarvestValue || 0);
 
   return (
     <div className="space-y-6 md:space-y-8">
@@ -307,12 +319,12 @@ const OverviewModule = ({ data }: any) => {
             </p>
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                <Search size={20} className={data.omni?.residentView?.sewageDetection.includes("Active") ? "text-rose-500" : "text-emerald-500"} />
+                <Search size={20} className={data.omni?.residentView?.sewageDetection?.includes("Active") ? "text-rose-500" : "text-emerald-500"} />
                 <span className="text-xs font-bold text-slate-700 uppercase tracking-widest">Source: {data.omni?.residentView?.sewageDetection}</span>
               </div>
               <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                 <TrendingDown size={20} className="text-emerald-500" />
-                <span className="text-xs font-bold text-slate-700 uppercase tracking-widest">Pollution Reduced by {data.progress?.pollutionReduction?.percentageReduced || "0"}%</span>
+                <span className="text-xs font-bold text-slate-700 uppercase tracking-widest">Pollution Reduced by {data.progress?.vitalityImprovement?.percentageGain || "0"}%</span>
               </div>
             </div>
           </div>
@@ -335,8 +347,8 @@ const OverviewModule = ({ data }: any) => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        <ModernStatusCard icon={Waves} title="Swim Safety" value={data.chatbot?.summary?.swimSafetyStatus} unit="" status="Recreation" color={data.chatbot?.summary?.swimSafetyStatus.includes('Safe') ? 'emerald' : 'rose'} />
-        <ModernStatusCard icon={Wind} title="Odor Profile" value={data.chatbot?.summary?.odorProfile} unit="" status="Air Quality" color={data.chatbot?.summary?.odorProfile.includes('Neutral') ? 'emerald' : 'amber'} />
+        <ModernStatusCard icon={Waves} title="Swim Safety" value={data.chatbot?.summary?.swimSafetyStatus} unit="" status="Recreation" color={data.chatbot?.summary?.swimSafetyStatus?.includes('Safe') ? 'emerald' : 'rose'} />
+        <ModernStatusCard icon={Wind} title="Odor Profile" value={data.chatbot?.summary?.odorProfile} unit="" status="Air Quality" color={data.chatbot?.summary?.odorProfile?.includes('Neutral') ? 'emerald' : 'amber'} />
         <ModernStatusCard icon={ShieldCheck} title="Data Accuracy" value={data.audit?.databaseHealth?.completenessPercentage || "98.2%"} unit="Verified" status="Data Engine" color="slate" />
         <ModernStatusCard icon={Database} title="Sensor Readings" value={data.audit?.auditMetadata?.totalRecordsAnalyzed?.toLocaleString() || "Syncing"} unit="Rows" status="System Activity" color="slate" />
       </div>
@@ -356,9 +368,9 @@ const TouristModule = ({ data }: any) => {
       <SectionHeader title="Visitor & Recreation Hub" icon={MapPin} />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
-        <ModernStatusCard icon={Waves} title="Swim Safety" value={swimSafety} unit="" status="Water Contact" color={swimSafety.includes('Safe') || swimSafety.includes('Ideal') ? 'emerald' : 'rose'} />
-        <ModernStatusCard icon={Wind} title="Odor Profile" value={odor} unit="" status="Air Quality" color={odor.includes('Neutral') || odor.includes('Fresh') ? 'emerald' : 'amber'} />
-        <ModernStatusCard icon={Activity} title="Skin Irritation" value={data.chatbot?.summary?.skinIrritationRisk} unit="" status="Exposure Risk" color={data.chatbot?.summary?.skinIrritationRisk.includes('None') ? 'emerald' : 'amber'} />
+        <ModernStatusCard icon={Waves} title="Swim Safety" value={swimSafety} unit="" status="Water Contact" color={swimSafety?.includes('Safe') || swimSafety?.includes('Ideal') ? 'emerald' : 'rose'} />
+        <ModernStatusCard icon={Wind} title="Odor Profile" value={odor} unit="" status="Air Quality" color={odor?.includes('Neutral') || odor?.includes('Fresh') ? 'emerald' : 'amber'} />
+        <ModernStatusCard icon={Activity} title="Skin Irritation" value={data.chatbot?.summary?.skinIrritationRisk} unit="" status="Exposure Risk" color={data.chatbot?.summary?.skinIrritationRisk?.includes('None') ? 'emerald' : 'amber'} />
         <ModernStatusCard icon={Fish} title="Risk to Fish" value={data.omni?.touristView?.fishKillLikelihood} unit="" status="Ecological Alert" color="blue" />
       </div>
 
@@ -375,7 +387,7 @@ const TouristModule = ({ data }: any) => {
               <div><h4 className="text-sm font-black uppercase text-slate-900 tracking-wider mb-1">Boating & Cruises</h4><p className="text-sm text-slate-500 font-medium">Boat channels are mostly clear. Keep an eye on the wind, as it can push water weeds into the marina suddenly.</p></div>
             </div>
             <div className="flex items-start gap-4">
-              <div className={`p-3 rounded-2xl ${data.chatbot?.summary?.skinIrritationRisk.includes('None') ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}><Activity size={24} /></div>
+              <div className={`p-3 rounded-2xl ${data.chatbot?.summary?.skinIrritationRisk?.includes('None') ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}><Activity size={24} /></div>
               <div><h4 className="text-sm font-black uppercase text-slate-900 tracking-wider mb-1">Health Advisory</h4><p className="text-sm text-slate-500 font-medium">{data.chatbot?.aiGuidelines?.healthWarning}</p></div>
             </div>
           </div>
@@ -402,10 +414,10 @@ const ResidentModule = ({ data }: any) => {
     <div className="space-y-6 md:space-y-8">
       <SectionHeader title="Community & Resident Hub" icon={Home} />
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
-        <ModernStatusCard icon={Wind} title="Neighborhood Odor" value={odor} unit="" status="Wind Drift Focus" color={odor.includes("Strong") || odor.includes("Noticeable") ? "amber" : "emerald"} />
-        <ModernStatusCard icon={Anchor} title="Marina Weed Blockage" value={data.omni?.residentView?.hyacinthGrowthForecast.split(' ')[0]} unit="Growth" status="Navigation Risk" color="amber" />
-        <ModernStatusCard icon={Droplets} title="Pet Safety" value={petSafety} unit="" status="Shoreline Danger" color={petSafety.includes("Toxic") ? "rose" : "emerald"} />
-        <ModernStatusCard icon={AlertOctagon} title="Sewage Detection" value={data.omni?.residentView?.sewageDetection} unit="" status="Current Inflow" color={data.omni?.residentView?.sewageDetection.includes("Active") ? "rose" : "emerald"} />
+        <ModernStatusCard icon={Wind} title="Neighborhood Odor" value={odor} unit="" status="Wind Drift Focus" color={odor?.includes("Strong") || odor?.includes("Noticeable") ? "amber" : "emerald"} />
+        <ModernStatusCard icon={Anchor} title="Marina Weed Blockage" value={data.omni?.residentView?.hyacinthGrowthForecast?.split(' ')[0]} unit="Growth" status="Navigation Risk" color="amber" />
+        <ModernStatusCard icon={Droplets} title="Pet Safety" value={petSafety} unit="" status="Shoreline Danger" color={petSafety?.includes("Toxic") ? "rose" : "emerald"} />
+        <ModernStatusCard icon={AlertOctagon} title="Sewage Detection" value={data.omni?.residentView?.sewageDetection} unit="" status="Current Inflow" color={data.omni?.residentView?.sewageDetection?.includes("Active") ? "rose" : "emerald"} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
@@ -430,9 +442,7 @@ const ResidentModule = ({ data }: any) => {
           <h3 className="text-2xl font-black italic tracking-tighter mb-4 relative z-10">See an algae bloom or raw sewage leak?</h3>
           <p className="text-sm text-slate-400 font-medium leading-relaxed mb-8 relative z-10">Your reports go straight to our system. Snap a photo to let the team know right away.</p>
           <Link href="/reporting" className="mt-auto bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase text-xs tracking-widest py-4 px-6 rounded-2xl transition-all shadow-lg shadow-emerald-500/20 relative z-10 flex items-center justify-between group">
-            <button className="mt-auto bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase text-xs tracking-widest py-4 px-6 rounded-2xl transition-all shadow-lg shadow-emerald-500/20 relative z-10 flex items-center justify-between group w-full">
             Report an Issue <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-          </button>
           </Link>
         </div>
       </div>
@@ -492,11 +502,7 @@ const ForensicsModule = ({ data, chartData, dateRange, setDateRange, isMounted, 
                   <linearGradient id="colorPho" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/><stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/></linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                <XAxis dataKey="x" fontSize={9} tickFormatter={(str) => {
-                    const parts = str.split('-');
-                    if(parts.length === 3) return new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2])).toLocaleDateString(undefined, { month: 'short', day: 'numeric'});
-                    return str;
-                  }} minTickGap={30} stroke="#94a3b8" />
+                <XAxis dataKey="x" fontSize={9} minTickGap={30} stroke="#94a3b8" />
                 <YAxis yAxisId="left" fontSize={9} stroke="#94a3b8" axisLine={false} tickLine={false} />
                 <YAxis yAxisId="right" orientation="right" fontSize={9} stroke="#f59e0b" axisLine={false} tickLine={false} domain={['dataMin - 1', 'dataMax + 1']} />
                 <YAxis yAxisId="ec" orientation="right" hide={true} domain={['dataMin - 5', 'dataMax + 5']} />
@@ -559,7 +565,7 @@ const ForensicsModule = ({ data, chartData, dateRange, setDateRange, isMounted, 
 
 // --- AGRI-SAFETY ---
 const AgriSafetyModule = ({ data }: any) => {
-  const harvestValue = Number(data.eco?.marketValue?.estimatedHarvestValue || data.eco?.marketValueEstimate || data.eco?.marketValue || data.eco) || 0;
+  const harvestValue = Number(data.eco?.marketValue?.estimatedHarvestValue || 0);
   const rawFertilizer = Number(data.forensic?.attributionSummary?.fertilizerLoadIndex) || 45;
   const rawSewage = Number(data.forensic?.attributionSummary?.sewageLoadIndex) || 55;
   const fertilizerPercentage = Math.round((rawFertilizer / (rawFertilizer + rawSewage)) * 100);
@@ -613,7 +619,7 @@ const AgriSafetyModule = ({ data }: any) => {
               <p className="text-xs text-slate-400 mt-2 font-bold">Of the total pollution feeding weeds in the main dam.</p>
             </div>
             <div className="p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
-              <p className="text-xs font-black italic uppercase text-emerald-300 leading-relaxed">Advice: Try not to apply fertilizer right before heavy rain. This helps stop it from washing into the Hartbeespoort dam.</p>
+              <p className="text-xs font-black italic uppercase text-emerald-300 leading-relaxed">Advice: Try not to apply fertilizer right before heavy rain. This helps stop it from washing into the dam.</p>
             </div>
           </div>
         </div>
@@ -622,16 +628,15 @@ const AgriSafetyModule = ({ data }: any) => {
   );
 };
 
-// --- AUDIT LOGS ---
+//Audit Log & System History
 const AuditLogModule = ({ data, tableData, dateRange, setDateRange, isAuditLoading, onUpdateAudit, communityReports }: any) => {
+  
   const handleDownloadCSV = () => {
     if (!tableData || tableData.length === 0) return;
-    const headers = ["Timestamp", "Nitrates (mg/L)", "Phosphates (mg/L)", "Status"];
+    const headers = ["Timestamp", "Nitrates (mg/L)", "Phosphates (mg/L)", "pH Level", "Conductivity (µS/cm)", "Status"];
     const rows = tableData.map((row: any) => {
-      const safeDate = new Date(`${row.x}T00:00:00`).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-      const isAnomaly = row.nitrates >= 2.4 || row.phosphates >= 0.15;
-      const status = isAnomaly ? "ANOMALY" : "VERIFIED";
-      return `"${safeDate}",${row.nitrates.toFixed(2)},${row.phosphates.toFixed(2)},${status}`;
+      const isAnomaly = row.nitrates >= 2.4 || row.phosphates >= 0.15 || row.ph > 9.0 || row.ph < 6.5;
+      return `"${row.x}",${row.nitrates.toFixed(2)},${row.phosphates.toFixed(2)},${row.ph.toFixed(2)},${row.ec.toFixed(2)},${isAnomaly ? "ANOMALY" : "VERIFIED"}`;
     });
     
     const csvContent = [headers.join(","), ...rows].join("\n");
@@ -639,63 +644,96 @@ const AuditLogModule = ({ data, tableData, dateRange, setDateRange, isAuditLoadi
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", `Harties_Audit_Log_${dateRange.start}_to_${dateRange.end}.csv`);
+    link.setAttribute("download", `Harties_Scientific_Audit.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
+  const getIssueColor = (subject: string) => {
+    const s = subject?.toLowerCase() || "";
+    // POLLUTION (Rose Red)
+    if (s.includes("pollution") || s.includes("sewage") || s.includes("leak") || s.includes("spill")) 
+        return "bg-rose-500 text-white border-rose-600 shadow-sm shadow-rose-200";
+    // ALGAE BLOOM (Cyan Blue)
+    if (s.includes("algae") || s.includes("bloom") || s.includes("green") || s.includes("hyacinth")) 
+        return "bg-cyan-500 text-white border-cyan-600 shadow-sm shadow-cyan-200";
+    // POOR WATER QUALITY (Amber Orange)
+    if (s.includes("quality") || s.includes("poor") || s.includes("dirty") || s.includes("muddy") || s.includes("odor")) 
+        return "bg-amber-500 text-white border-amber-600 shadow-sm shadow-amber-200";
+    // OTHER (Slate Grey)
+    return "bg-slate-400 text-white border-slate-500 shadow-sm";
+  };
+
   return (
-    <div className="space-y-6 md:space-y-8">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {/* Top Level Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <AuditStat label="Highest Sewage Spike" value={data.audit?.historicalExtremes?.peakSewageInflowMgL?.toFixed(2)} unit="mg/L" />
         <AuditStat label="Highest Fertilizer Spike" value={data.audit?.historicalExtremes?.peakFertilizerInflowMgL?.toFixed(2)} unit="mg/L" />
         <AuditStat label="Data Accuracy" value={data.audit?.databaseHealth?.completenessPercentage || "98.2%"} unit="DATA TRUST" />
-        <AuditStat label="Sensor Uptime" value="99.8%" unit="HARDWARE UPTIME" />
+        <AuditStat label="Hardware Status" value="99.8%" unit="SENSOR UPTIME" />
       </div>
       
-      {/* SENSOR HISTORY TABLE */}
-      <div className="bg-white border border-slate-200 rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-2xl">
-        <div className="p-5 md:p-8 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-slate-50/50">
+      {/* --- SYSTEM HISTORY TABLE --- */}
+      <div className="bg-white border border-slate-200 rounded-[2.5rem] overflow-hidden shadow-xl">
+        <div className="p-8 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 bg-slate-50/30">
           <div>
-            <h3 className="text-[10px] md:text-xs font-black uppercase text-slate-800 tracking-widest italic">System History & Data Records</h3>
-            <span className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1 block">
-              Records: {data.audit?.auditMetadata?.totalRecordsAnalyzed?.toLocaleString() || "Syncing"} | Download Official Records
-            </span>
+            <h3 className="text-xs font-black uppercase text-slate-800 tracking-[0.2em] italic flex items-center gap-2">
+              <Database size={16} className="text-emerald-500" /> Full System History
+            </h3>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+              Cross-Metric Sensor Audit Log • Multi-Color Telemetry Analysis
+            </p>
           </div>
 
-          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 bg-white p-2 md:pl-4 rounded-xl border border-slate-200 shadow-sm w-full lg:w-auto">
-            <Calendar size={14} className="text-emerald-600 hidden sm:block shrink-0" />
-            <input type="date" value={dateRange.start} onChange={(e)=>setDateRange({...dateRange, start: e.target.value})} className="bg-transparent text-slate-700 text-[10px] md:text-[11px] font-black uppercase outline-none cursor-pointer flex-grow min-w-[100px]" style={{ colorScheme: 'light' }} />
-            <ArrowRight size={10} className="text-slate-400 shrink-0" />
-            <input type="date" value={dateRange.end} onChange={(e)=>setDateRange({...dateRange, end: e.target.value})} className="bg-transparent text-slate-700 text-[10px] md:text-[11px] font-black uppercase outline-none cursor-pointer flex-grow min-w-[100px]" style={{ colorScheme: 'light' }} />
-            <button onClick={onUpdateAudit} disabled={isAuditLoading} className="w-full sm:w-auto bg-slate-900 text-white hover:bg-slate-700 transition-colors px-4 py-2 rounded-lg text-[10px] font-black tracking-widest uppercase flex items-center justify-center gap-2 disabled:opacity-50">
-              {isAuditLoading ? <RefreshCw size={12} className="animate-spin" /> : "Sync Logs"}
+          <div className="flex flex-wrap items-center gap-3 bg-white p-2 rounded-2xl border border-slate-200 shadow-inner w-full lg:w-auto">
+            <Calendar size={14} className="text-emerald-500 ml-2" />
+            <input type="date" value={dateRange.start} onChange={(e)=>setDateRange({...dateRange, start: e.target.value})} className="bg-transparent text-slate-700 text-[11px] font-black uppercase outline-none" style={{ colorScheme: 'light' }} />
+            <div className="h-4 w-px bg-slate-200 mx-1" />
+            <input type="date" value={dateRange.end} onChange={(e)=>setDateRange({...dateRange, end: e.target.value})} className="bg-transparent text-slate-700 text-[11px] font-black uppercase outline-none" style={{ colorScheme: 'light' }} />
+            <button onClick={onUpdateAudit} disabled={isAuditLoading} className="bg-slate-900 text-white hover:bg-emerald-600 transition-all px-5 py-2.5 rounded-xl text-[10px] font-black tracking-widest uppercase flex items-center gap-2 disabled:opacity-50">
+              {isAuditLoading ? <RefreshCw size={12} className="animate-spin" /> : "Sync Sensors"}
             </button>
-            <button onClick={handleDownloadCSV} className="w-full sm:w-auto bg-emerald-600 text-white hover:bg-emerald-500 transition-colors px-4 py-2 rounded-lg text-[10px] font-black tracking-widest uppercase flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20">
+            <button onClick={handleDownloadCSV} className="bg-emerald-600 text-white hover:bg-emerald-500 transition-all px-5 py-2.5 rounded-xl text-[10px] font-black tracking-widest uppercase flex items-center gap-2 shadow-lg shadow-emerald-500/20">
               <Download size={14} /> Export CSV
             </button>
           </div>
         </div>
 
-        <div className="overflow-x-auto max-h-[400px] md:max-h-[500px]">
-          <table className="w-full text-left min-w-[500px]">
-            <thead className="bg-slate-50 border-b border-slate-100 text-[9px] md:text-[10px] font-black uppercase text-slate-400 tracking-widest sticky top-0 z-10 shadow-sm">
-              <tr><th className="px-6 md:px-10 py-4 md:py-6">Timestamp</th><th className="px-6 md:px-10 py-4 md:py-6 text-slate-900">Nitrates</th><th className="px-6 md:px-10 py-4 md:py-6 text-emerald-600">Phosphates</th><th className="px-6 md:px-10 py-4 md:py-6">Status</th></tr>
+        <div className="overflow-x-auto max-h-[550px] custom-scrollbar">
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-slate-900 text-[10px] font-black uppercase text-slate-400 tracking-widest sticky top-0 z-20">
+              <tr>
+                <th className="px-10 py-5">Timestamp</th>
+                <th className="px-6 py-5 text-center text-emerald-400">Nitrates</th>
+                <th className="px-6 py-5 text-center text-blue-400">Phosphates</th>
+                <th className="px-6 py-5 text-center text-amber-400">pH Level</th>
+                <th className="px-6 py-5 text-center text-cyan-400">Salt (EC)</th>
+                <th className="px-12 py-5 text-center text-white">Verification</th>
+              </tr>
             </thead>
-            <tbody className="text-sm font-medium text-slate-600">
+            <tbody className="text-[11px] font-bold">
               {tableData.map((row: any, i: number) => {
-                const safeDate = new Date(`${row.x}T00:00:00`);
-                const isAnomaly = row.nitrates >= 2.4 || row.phosphates >= 0.15;
-
+                const isAnomaly = row.nitrates >= 2.4 || row.phosphates >= 0.15 || row.ph > 9.0 || row.ph < 6.5;
                 return (
-                  <tr key={i} className={`border-b transition-all text-[10px] md:text-[11px] whitespace-nowrap ${isAnomaly ? 'bg-rose-50/80 border-rose-200 hover:bg-rose-100/80' : 'border-slate-50 hover:bg-slate-50/80'}`}>
-                    <td className={`px-6 md:px-10 py-4 md:py-5 font-mono ${isAnomaly ? 'text-rose-900' : 'text-slate-400'}`}>{safeDate.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</td>
-                    <td className={`px-6 md:px-10 py-4 md:py-5 font-black ${isAnomaly ? 'text-rose-700' : 'text-slate-900'}`}>{row.nitrates.toFixed(2)}</td>
-                    <td className={`px-6 md:px-10 py-4 md:py-5 font-black ${isAnomaly ? 'text-rose-700' : 'text-emerald-600'}`}>{row.phosphates.toFixed(2)}</td>
-                    <td className="px-6 md:px-10 py-4 md:py-5">
-                      <span className={`px-2 md:px-3 py-1 border rounded-full shadow-sm italic uppercase font-black text-[8px] md:text-[9px] ${isAnomaly ? 'bg-rose-500 text-white border-rose-600 shadow-rose-500/30 animate-pulse' : 'bg-white border-slate-200 text-slate-500'}`}>
-                        {isAnomaly ? 'Anomaly' : 'Verified'}
+                  <tr key={i} className={`border-b transition-colors ${isAnomaly ? 'bg-rose-50/50 hover:bg-rose-100/50 border-rose-100' : 'border-slate-50 hover:bg-slate-50/50'}`}>
+                    <td className="px-10 py-4 font-mono text-slate-400">{row.x}</td>
+                    <td className={`px-6 py-4 text-center ${isAnomaly && row.nitrates > 2 ? 'text-rose-700 font-black' : 'text-emerald-600 font-black'}`}>
+                        {row.nitrates.toFixed(3)}
+                    </td>
+                    <td className={`px-6 py-4 text-center ${isAnomaly && row.phosphates > 0.1 ? 'text-rose-700 font-black' : 'text-blue-600 font-black'}`}>
+                        {row.phosphates.toFixed(3)}
+                    </td>
+                    <td className={`px-6 py-4 text-center ${isAnomaly && (row.ph > 9 || row.ph < 6.5) ? 'text-rose-700 font-black' : 'text-amber-600 font-black'}`}>
+                        {row.ph.toFixed(2)}
+                    </td>
+                    <td className={`px-6 py-4 text-center ${isAnomaly && row.ec > 80 ? 'text-rose-700 font-black' : 'text-cyan-600 font-black'}`}>
+                        {row.ec.toFixed(1)}
+                    </td>
+                    <td className="px-12 py-4 text-center">
+                      <span className={`px-4 py-1 border rounded-full uppercase font-black text-[9px] inline-block ${isAnomaly ? 'bg-rose-500 text-white border-rose-600 animate-pulse' : 'bg-white border-slate-200 text-slate-500'}`}>
+                        {isAnomaly ? 'Anomaly' : 'Safe'}
                       </span>
                     </td>
                   </tr>
@@ -706,69 +744,53 @@ const AuditLogModule = ({ data, tableData, dateRange, setDateRange, isAuditLoadi
         </div>
       </div>
 
-      {/* --- NEW COMMUNITY REPORTS TABLE --- */}
-      <div className="bg-white border border-slate-200 rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-2xl mt-8">
-        <div className="p-5 md:p-8 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-slate-50/50">
-          <div>
-            <h3 className="text-[10px] md:text-xs font-black uppercase text-slate-800 tracking-widest italic flex items-center gap-2">
-              <Users size={16} className="text-emerald-600" /> Community Field Reports
+      {/* --- COMMUNITY SIGHTINGS LOG --- */}
+      <div className="bg-white border border-slate-200 rounded-[2.5rem] overflow-hidden shadow-xl">
+        <div className="p-8 border-b border-slate-100 bg-slate-50/30">
+            <h3 className="text-xs font-black uppercase text-slate-800 tracking-[0.2em] italic flex items-center gap-2">
+              <Users size={16} className="text-cyan-500" /> Community Sightings Log
             </h3>
-            <span className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1 block">
-              Records: {communityReports.length} | Crowdsourced Incident Data
-            </span>
-          </div>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+              Crowdsourced incident data categorized by severity
+            </p>
         </div>
 
-        <div className="overflow-x-auto max-h-[400px] md:max-h-[500px]">
-          <table className="w-full text-left min-w-[700px]">
-            <thead className="bg-slate-50 border-b border-slate-100 text-[9px] md:text-[10px] font-black uppercase text-slate-400 tracking-widest sticky top-0 z-10 shadow-sm">
+        <div className="overflow-x-auto max-h-[450px] custom-scrollbar">
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-slate-900 text-[10px] font-black uppercase text-slate-400 tracking-widest sticky top-0 z-20">
               <tr>
-                <th className="px-6 md:px-8 py-4 md:py-6">Date</th>
-                <th className="px-6 md:px-8 py-4 md:py-6">Reporter</th>
-                <th className="px-6 md:px-8 py-4 md:py-6">Location</th>
-                <th className="px-6 md:px-8 py-4 md:py-6">Issue Type</th>
-                <th className="px-6 md:px-8 py-4 md:py-6">Details</th>
+                <th className="px-10 py-5">Date Submitted</th>
+                <th className="px-10 py-5">Reporter</th>
+                <th className="px-10 py-5 text-center">Category</th>
+                <th className="px-10 py-5">Details</th>
               </tr>
             </thead>
-            <tbody className="text-sm font-medium text-slate-600">
+            <tbody className="text-[11px] font-bold text-slate-600">
               {communityReports.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-10 text-center text-slate-400 text-xs uppercase tracking-widest font-black">
-                    No community reports found.
+                  <td colSpan={4} className="px-10 py-16 text-center text-slate-300 text-xs uppercase tracking-[0.3em] font-black">
+                    No field reports on record
                   </td>
                 </tr>
               ) : (
-                communityReports.map((report: any) => {
-                  const submitDate = new Date(report.dateSubmitted).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-                  
-                  // Simple color coding for badges
-                  let badgeClass = "bg-slate-100 text-slate-600 border-slate-200";
-                  const lowerSubject = report.subject?.toLowerCase() || "";
-                  if (lowerSubject.includes('pollution') || lowerSubject.includes('sewage')) badgeClass = "bg-rose-50 text-rose-600 border-rose-200";
-                  if (lowerSubject.includes('bloom') || lowerSubject.includes('algae')) badgeClass = "bg-amber-50 text-amber-600 border-amber-200";
-                  if (lowerSubject.includes('quality') || lowerSubject.includes('clear')) badgeClass = "bg-emerald-50 text-emerald-600 border-emerald-200";
-
-                  return (
-                    <tr key={report.id} className="border-b transition-all text-[10px] md:text-[11px] border-slate-50 hover:bg-slate-50/80">
-                      <td className="px-6 md:px-8 py-4 font-mono text-slate-400 whitespace-nowrap">{submitDate}</td>
-                      <td className="px-6 md:px-8 py-4 font-black text-slate-900 whitespace-nowrap">{report.name}</td>
-                      <td className="px-6 md:px-8 py-4 font-bold text-slate-600 truncate max-w-[150px]">{report.location}</td>
-                      <td className="px-6 md:px-8 py-4 whitespace-nowrap">
-                        <span className={`px-3 py-1 border rounded-md uppercase font-black text-[9px] tracking-widest ${badgeClass}`}>
+                communityReports.map((report: any) => (
+                    <tr key={report.id} className="border-b border-slate-50 hover:bg-slate-50/30 transition-colors">
+                      <td className="px-10 py-5 font-mono text-slate-400">{new Date(report.dateSubmitted).toLocaleDateString()}</td>
+                      <td className="px-10 py-5 font-black text-slate-900 uppercase tracking-tight">{report.name}</td>
+                      <td className="px-10 py-5 text-center">
+                        <span className={`px-4 py-1.5 border rounded-lg uppercase font-black text-[9px] tracking-wider inline-block ${getIssueColor(report.subject)}`}>
                           {report.subject}
                         </span>
                       </td>
-                      <td className="px-6 md:px-8 py-4 text-slate-500 italic max-w-[200px] truncate">"{report.message}"</td>
+                      <td className="px-10 py-5 text-slate-500 italic max-w-md truncate">"{report.message}"</td>
                     </tr>
                   )
-                })
+                )
               )}
             </tbody>
           </table>
         </div>
       </div>
-      {/* -------------------------------------- */}
-
     </div>
   );
 };
@@ -779,17 +801,17 @@ const ModernStatusCard = ({ title, value, unit, status, color, icon: Icon }: any
   const styles: any = { emerald: "text-emerald-600 border-emerald-200 bg-emerald-50", blue: "text-blue-600 border-blue-200 bg-blue-50", amber: "text-amber-600 border-amber-200 bg-amber-50", rose: "text-rose-600 border-rose-200 bg-rose-50", slate: "text-slate-600 border-slate-200 bg-slate-50" };
   return (
     <div className="bg-white border border-slate-200 p-5 md:p-6 rounded-[1.5rem] md:rounded-[2rem] shadow-sm hover:shadow-lg transition-all group flex flex-col justify-between">
-       <div className="flex justify-between items-start mb-4">
-          <div className={`w-10 h-10 md:w-12 md:h-12 rounded-[1rem] flex items-center justify-center border ${styles[color]} group-hover:scale-105 transition-transform shrink-0`}><Icon size={20} className="md:w-6 md:h-6" /></div>
-          <p className={`text-[8px] md:text-[9px] font-black uppercase tracking-widest px-2 py-1 md:px-3 md:py-1.5 rounded-full border shadow-sm ${styles[color]} text-right leading-tight max-w-[60%]`}>{status}</p>
-       </div>
-       <div>
-          <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5 md:mb-1">{title}</p>
-          <div className="flex items-baseline gap-1 md:gap-1.5">
-             <h3 className="text-3xl md:text-4xl font-black text-slate-900 italic tracking-tighter">{value || "---"}</h3>
-             <span className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase">{unit}</span>
-          </div>
-       </div>
+        <div className="flex justify-between items-start mb-4">
+           <div className={`w-10 h-10 md:w-12 md:h-12 rounded-[1rem] flex items-center justify-center border ${styles[color]} group-hover:scale-105 transition-transform shrink-0`}><Icon size={20} className="md:w-6 md:h-6" /></div>
+           <p className={`text-[8px] md:text-[9px] font-black uppercase tracking-widest px-2 py-1 md:px-3 md:py-1.5 rounded-full border shadow-sm ${styles[color]} text-right leading-tight max-w-[60%]`}>{status}</p>
+        </div>
+        <div>
+           <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5 md:mb-1">{title}</p>
+           <div className="flex items-baseline gap-1 md:gap-1.5">
+              <h3 className="text-3xl md:text-4xl font-black text-slate-900 italic tracking-tighter">{value || "---"}</h3>
+              <span className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase">{unit}</span>
+           </div>
+        </div>
     </div>
   );
 };
