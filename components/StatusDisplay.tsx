@@ -1,11 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { analysisService } from "@/services/analysisService";
 import { 
-  Waves, 
-  ShieldCheck, 
   Wind, 
+  ShieldCheck, 
   ArrowRight,
   RefreshCw,
   Droplets,
@@ -16,10 +14,9 @@ import {
   Heart
 } from "lucide-react";
 import Link from "next/link";
-// IMPORT YOUR EXTERNAL BUTTON HERE
 import InstallButton from "@/components/InstallButton"; 
+import { DamLevel } from "@/components/DamStatusBanner"; // Adjust import path if needed
 
-// --- THE STATUS DISPLAY COMPONENT ---
 const damGradeExplanations: Record<string, string> = {
   "1: Hazardous": "Toxic or completely choked by weeds. Unsafe for humans, animals, and boats.",
   "2: Critical": "Severe pollution and thick green coverage. Bad smells and highly unsafe for recreation.",
@@ -33,75 +30,71 @@ const damGradeExplanations: Record<string, string> = {
   "10: Pristine": "Crystal clear and perfectly balanced. As healthy and beautiful as nature gets."
 };
 
-export const StatusDisplay: React.FC = () => {
-  const [data, setData] = useState<any>(null);
+interface StatusDisplayProps {
+  data: any;
+  isLoading: boolean;
+  level: DamLevel;
+}
+
+export const StatusDisplay: React.FC<StatusDisplayProps> = ({ data, isLoading, level }) => {
   const [aiMessage, setAiMessage] = useState<string>("Hi! I'm just checking the sensors for you...");
-  const [isSystemOnline, setIsSystemOnline] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState(true);
 
+  const isSystemOnline = !!data;
+  const view = data?.touristView;
+  const score = isSystemOnline ? Math.round(view.waterHealthScore) : 0;
+
+  // AI Chatbot Logic runs when data arrives
   useEffect(() => {
-    const loadSystemData = async () => {
+    const fetchAiMessage = async () => {
+      if (!isSystemOnline || !view) return;
       try {
-        const telemetry = await analysisService.getOmniDashboard();
-        const score = telemetry?.touristView?.waterHealthScore;
-        
-        if (typeof score !== "number") throw new Error("Offline");
-        
-        setData(telemetry);
-        setIsSystemOnline(true);
-
-        try {
-          // Tell the AI exactly what persona to adopt and how long to make it
-          const promptText = `You are the Green Blanket live status assistant. The current water health score is ${Math.round(score)} out of 100 (${telemetry.touristView.healthGrade}). Write a friendly, conversational 2-sentence status update for a tourist. Mention the score and reassure them that our systems are online and monitoring the water continuously. Do not use generic AI intros like 'Hello there'.`;
+        const promptText = `You are the Green Blanket live status assistant. The current water health score is ${score} out of 100 (${view.healthGrade}). Write a friendly, conversational 2-sentence status update for a tourist. Mention the score and reassure them that our systems are online and monitoring the water continuously. Do not use generic AI intros like 'Hello there'.`;
 
         const aiResponse = await fetch("http://localhost:5000/api/Chatbot/ask", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: promptText })
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: promptText })
         });
           
-          const aiData = await aiResponse.json();
-          
-          setAiMessage(aiData.response || aiData.message || "The water is looking good and our systems are fully online!");
-        } catch (aiErr) {
-          // Fallback if the AI specifically fails
-          setAiMessage(`Hi! The water is scoring a ${Math.round(score)} today. Everything is working correctly, and we're keeping a close watch to keep you safe!`);
-        }
-
-      } catch (err) {
-        console.error("Connection Error:", err);
-        setIsSystemOnline(false);
-        setAiMessage("Oh no! It looks like my connection to the dam is currently down. My systems are offline for a moment, but we're working hard to get the satellite link back up for you!");
-      } finally {
-        setIsLoading(false);
+        const aiData = await aiResponse.json();
+        setAiMessage(aiData.response || aiData.message || "The water is looking good and our systems are fully online!");
+      } catch (aiErr) {
+        setAiMessage(`Hi! The water is scoring a ${score} today. Everything is working correctly, and we're keeping a close watch to keep you safe!`);
       }
     };
 
-    loadSystemData();
-  }, []);
+    if (isSystemOnline) {
+      fetchAiMessage();
+    } else if (!isLoading) {
+      setAiMessage("Oh no! It looks like my connection to the dam is currently down. My systems are offline for a moment, but we're working hard to get the satellite link back up for you!");
+    }
+  }, [isSystemOnline, score, view, isLoading]);
 
   if (isLoading) return <LoadingHUD />;
 
-  const view = data?.touristView;
-  const score = data ? Math.round(view.waterHealthScore) : 0;
-  const isSafe = score >= 70;
-  const isDangerous = score < 40;
-  const statusColor = isSafe ? "emerald" : isDangerous ? "rose" : "amber";
+  // Map the 4 DamLevels to your Tailwind color themes
+  const colorMap = {
+    analyzing: "slate",
+    safe: "emerald",
+    moderate: "blue",
+    poor: "amber",
+    unsafe: "rose"
+  };
+  const statusColor = colorMap[level];
 
   return (
     <div className="relative w-full max-w-6xl mx-auto px-4 bg-transparent font-sans">
       
       {isSystemOnline && (
-        <div className={`absolute inset-0 blur-[100px] opacity-10 rounded-full transition-colors duration-1000 ${
-          isSafe ? 'bg-emerald-500' : isDangerous ? 'bg-rose-500' : 'bg-amber-500'
-        }`} />
+        <div className={`absolute inset-0 blur-[100px] opacity-10 rounded-full transition-colors duration-1000 bg-${statusColor}-500`} />
       )}
 
       <div className="relative bg-white border border-slate-200 rounded-[2.5rem] md:rounded-[4rem] shadow-2xl overflow-hidden transition-all duration-700">
         <div className="flex flex-col lg:flex-row">
           
+          {/* LEFT COLUMN: Circular Gauge */}
           <div className={`w-full lg:w-1/3 p-8 md:p-12 flex flex-col items-center justify-center border-b lg:border-b-0 lg:border-r border-slate-100 ${
-            !isSystemOnline ? 'bg-slate-50' : isSafe ? 'bg-emerald-50/50' : isDangerous ? 'bg-rose-50/50' : 'bg-amber-50/50'
+            !isSystemOnline ? 'bg-slate-50' : `bg-${statusColor}-50/50`
           }`}>
             <div className="relative">
               <div className={`w-44 h-44 md:w-56 md:h-56 rounded-full border-[12px] bg-white flex items-center justify-center shadow-inner ${!isSystemOnline ? 'border-slate-200 opacity-50' : ''}`}>
@@ -114,7 +107,7 @@ export const StatusDisplay: React.FC = () => {
               </div>
               
               <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full border shadow-lg flex items-center gap-2 font-black text-[9px] uppercase tracking-widest whitespace-nowrap ${
-                isSystemOnline ? 'bg-white border-emerald-100 text-emerald-600' : 'bg-white border-rose-100 text-rose-600'
+                isSystemOnline ? `bg-white border-${statusColor}-100 text-${statusColor}-600` : 'bg-white border-rose-100 text-rose-600'
               }`}>
                 {isSystemOnline ? <Wifi size={12} className="animate-pulse" /> : <WifiOff size={12} />}
                 {isSystemOnline ? "Systems Online" : "Systems Offline"}
@@ -135,6 +128,7 @@ export const StatusDisplay: React.FC = () => {
             )}
           </div>
 
+          {/* RIGHT COLUMN: AI & Stats */}
           <div className="w-full lg:w-2/3 p-8 md:p-12 space-y-8 bg-white">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-1 text-center lg:text-left">
@@ -165,7 +159,7 @@ export const StatusDisplay: React.FC = () => {
 
             {isSystemOnline && (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                <StatusBadge icon={ShieldCheck} label="Swimming" status={view.swimSafety} color={isSafe ? 'emerald' : 'rose'} />
+                <StatusBadge icon={ShieldCheck} label="Swimming" status={view.swimSafety} color={level === 'safe' ? 'emerald' : 'rose'} />
                 <StatusBadge icon={Wind} label="Odor Level" status={view.odorLevel} color="slate" />
                 <StatusBadge icon={Droplets} label="Health Risk" status={view.skinIrritationRisk} color="slate" />
               </div>
@@ -177,7 +171,6 @@ export const StatusDisplay: React.FC = () => {
                 <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
               </Link>
 
-              {/* CLEAN IMPORTED COMPONENT INSTEAD OF DUPLICATED LOGIC */}
               <InstallButton />
 
               {!isSystemOnline && (

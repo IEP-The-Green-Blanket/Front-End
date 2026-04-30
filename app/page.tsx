@@ -1,11 +1,47 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { analysisService } from "@/services/analysisService";
 import { StatusDisplay } from "@/components/StatusDisplay";
+import { DamStatusBanner, DamLevel, calculateDamLevel } from "@/components/DamStatusBanner"; 
 import { ArrowRight, Microscope, Tractor, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 
 export default function Home() {
+  const [telemetry, setTelemetry] = useState<any>(null);
+  const [level, setLevel] = useState<DamLevel>("analyzing");
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTelemetry = async () => {
+      try {
+        const data = await analysisService.getOmniDashboard();
+        const score = data?.touristView?.waterHealthScore;
+        
+        if (typeof score === "number") {
+          setTelemetry(data);
+          setLevel(calculateDamLevel(score)); // Classify the score immediately
+        }
+      } catch (err) {
+        console.error("Failed to fetch dashboard data:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTelemetry();
+  }, []);
+
   return (
     <main className="min-h-screen bg-transparent font-sans selection:bg-emerald-100">
-      <section className="relative pt-16 pb-24 md:pt-24 md:pb-40 px-4 overflow-hidden">
+      
+      {/* Banner receives the shared level */}
+      <DamStatusBanner 
+        level={level} 
+        activeMetric={telemetry ? `Score: ${Math.round(telemetry.touristView.waterHealthScore)}/100` : "Connecting..."} 
+      />
+
+      <section className="relative pt-12 pb-24 md:pt-20 md:pb-40 px-4 overflow-hidden">
         
         {/* Cinematic Watermark (Mobile Hidden) */}
         <div className="absolute top-10 left-10 opacity-[0.1] pointer-events-none select-none hidden lg:block">
@@ -30,7 +66,12 @@ export default function Home() {
           </div>
 
           {/* THE LIVE PULSE HUD */}
-          <StatusDisplay />
+          {/* Status Display receives the EXACT SAME data */}
+          <StatusDisplay 
+            data={telemetry} 
+            isLoading={isLoading} 
+            level={level} 
+          />
 
           {/* FEATURES GRID */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 px-4">
