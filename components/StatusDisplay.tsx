@@ -54,11 +54,11 @@ export const StatusDisplay: React.FC = () => {
           // Tell the AI exactly what persona to adopt and how long to make it
           const promptText = `You are the Green Blanket live status assistant. The current water health score is ${Math.round(score)} out of 100 (${telemetry.touristView.healthGrade}). Write a friendly, conversational 2-sentence status update for a tourist. Mention the score and reassure them that our systems are online and monitoring the water continuously. Do not use generic AI intros like 'Hello there'.`;
 
-          const aiResponse = await fetch("https://greenblanket.crabdance.com/api/Chatbot/ask", {
+        const aiResponse = await fetch("http://localhost:5000/api/Chatbot/ask", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ message: promptText })
-          });
+        });
           
           const aiData = await aiResponse.json();
           
