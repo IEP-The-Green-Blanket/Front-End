@@ -13,69 +13,13 @@ import {
   Wifi,
   WifiOff,
   CheckCircle2,
-  Heart,
-  Download
+  Heart
 } from "lucide-react";
 import Link from "next/link";
+// IMPORT YOUR EXTERNAL BUTTON HERE
+import InstallButton from "@/components/InstallButton"; 
 
-// --- 1. THE PERSISTENT PWA INSTALL BUTTON ---
-interface InstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-}
-
-export function InstallButton() {
-  const [deferredPrompt, setDeferredPrompt] = useState<InstallPromptEvent | null>(null);
-  // Defaulting to true so the button is ALWAYS visible
-  const [showButton, setShowButton] = useState(true);
-
-  useEffect(() => {
-    const handler = (event: Event) => {
-      event.preventDefault();
-      setDeferredPrompt(event as InstallPromptEvent);
-    };
-
-    window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
-  }, []);
-
-  const handleInstall = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const result = await deferredPrompt.userChoice;
-      if (result.outcome === "accepted") {
-        setDeferredPrompt(null);
-      }
-      return;
-    }
-
-    // --- BETTER DIAGNOSTICS ---
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-
-    if (isStandalone) {
-      alert("The app is already installed and running as a standalone window!");
-    } else if (isIOS) {
-      alert("On iOS, please tap the 'Share' button below and select 'Add to Home Screen' to install.");
-    } else {
-      alert("The browser hasn't cleared the app for installation yet. Make sure you aren't in Incognito mode and that the site is fully loaded!");
-    }
-  };
-
-  // Guard removed: The button will always render now
-  return (
-    <button
-      onClick={handleInstall}
-      className="flex-1 bg-emerald-600 text-white font-black uppercase tracking-widest text-xs py-5 rounded-2xl hover:bg-emerald-500 transition-all shadow-xl shadow-emerald-600/20 flex items-center justify-center gap-3 group"
-      style={{ backgroundImage: "linear-gradient(180deg, #10b981 0%, #059669 100%)" }}
-    >
-      <Download size={16} className="group-hover:scale-110 transition-transform" />
-      Install App
-    </button>
-  );
-}
-
-// --- 2. THE STATUS DISPLAY COMPONENT ---
+// --- THE STATUS DISPLAY COMPONENT ---
 const damGradeExplanations: Record<string, string> = {
   "1: Hazardous": "Toxic or completely choked by weeds. Unsafe for humans, animals, and boats.",
   "2: Critical": "Severe pollution and thick green coverage. Bad smells and highly unsafe for recreation.",
@@ -107,20 +51,20 @@ export const StatusDisplay: React.FC = () => {
         setIsSystemOnline(true);
 
         try {
+          // Tell the AI exactly what persona to adopt and how long to make it
+          const promptText = `You are the Green Blanket live status assistant. The current water health score is ${Math.round(score)} out of 100 (${telemetry.touristView.healthGrade}). Write a friendly, conversational 2-sentence status update for a tourist. Mention the score and reassure them that our systems are online and monitoring the water continuously. Do not use generic AI intros like 'Hello there'.`;
+
           const aiResponse = await fetch("https://greenblanket.crabdance.com/api/Chatbot/ask", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              message: `The water quality score is ${Math.round(score)} out of 100, which is ${telemetry.touristView.healthGrade}. 
-                        Systems are running perfectly. Can you explain this to a visitor in a very friendly, 
-                        easy-to-understand way? Please mention that our systems are currently online and 
-                        keeping a close eye on everything.`
-            })
+            body: JSON.stringify({ message: promptText })
           });
           
           const aiData = await aiResponse.json();
-          setAiMessage(aiData.message || aiData.reply || "The water is looking good and our systems are fully online!");
+          
+          setAiMessage(aiData.response || aiData.message || "The water is looking good and our systems are fully online!");
         } catch (aiErr) {
+          // Fallback if the AI specifically fails
           setAiMessage(`Hi! The water is scoring a ${Math.round(score)} today. Everything is working correctly, and we're keeping a close watch to keep you safe!`);
         }
 
@@ -228,12 +172,12 @@ export const StatusDisplay: React.FC = () => {
             )}
 
             <div className="pt-4 flex flex-col sm:flex-row gap-4">
-              <Link href="/analytics" className="flex-1 bg-slate-900 text-white font-black uppercase tracking-widest text-xs py-5 rounded-2xl hover:bg-slate-800 transition-all shadow-xl flex items-center justify-center gap-3 group">
+              <Link href="/analysis" className="flex-1 bg-slate-900 text-white font-black uppercase tracking-widest text-xs py-5 rounded-2xl hover:bg-slate-800 transition-all shadow-xl flex items-center justify-center gap-3 group">
                 Enter Analytics Center
                 <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
               </Link>
 
-              {/* ALWAYS VISIBLE INSTALL BUTTON */}
+              {/* CLEAN IMPORTED COMPONENT INSTEAD OF DUPLICATED LOGIC */}
               <InstallButton />
 
               {!isSystemOnline && (

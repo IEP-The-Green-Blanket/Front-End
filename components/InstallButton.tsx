@@ -1,91 +1,85 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Download } from "lucide-react";
 
-// looks at the input of the user and returns accepted or dismissed
 interface InstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
+// Tell TypeScript about our custom global variable
+declare global {
+  interface Window {
+    deferredPwaPrompt?: InstallPromptEvent;
+  }
+}
+
 export default function InstallButton() {
-  const [deferredPrompt, setDeferredPrompt] =
-    useState<InstallPromptEvent | null>(null);
-  const [showButton, setShowButton] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<InstallPromptEvent | null>(null);
 
   useEffect(() => {
-    // checks one time of the first load of the page if the user can install the app, if so, it shows the button
+    // 1. Check if the event was already caught by our global script in layout.tsx
+    if (typeof window !== 'undefined' && window.deferredPwaPrompt) {
+      setDeferredPrompt(window.deferredPwaPrompt);
+    }
+
+    // 2. Standard listener just in case it fires later
     const handler = (event: Event) => {
       event.preventDefault();
-      setDeferredPrompt(event as InstallPromptEvent);
-      setShowButton(true);
+      const promptEvent = event as InstallPromptEvent;
+      setDeferredPrompt(promptEvent);
+      window.deferredPwaPrompt = promptEvent; // Keep global object in sync
     };
 
     window.addEventListener("beforeinstallprompt", handler);
-
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
-  // installs the app when the user clicks on the button, and then hides the button again
   const handleInstall = async () => {
-    if (!deferredPrompt) return;
+    // Check both React state AND the window object directly to be safe
+    const promptToUse = deferredPrompt || (typeof window !== 'undefined' ? window.deferredPwaPrompt : null);
 
-    deferredPrompt.prompt();
-    const result = await deferredPrompt.userChoice;
+    if (!promptToUse) {
+      // If we STILL don't have it, give accurate diagnostic feedback
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
 
-    if (result.outcome === "accepted") {
-      console.log("User installed the app");
+      if (isStandalone) {
+        alert("Project Green Blanket is already installed and running as a standalone window!");
+      } else if (isIOS) {
+        alert("On iOS, Apple forces you to tap the 'Share' button at the bottom of Safari and select 'Add to Home Screen'.");
+      } else {
+        alert("The app is ready! Please click the install icon directly in your browser's address bar at the top of the screen.");
+      }
+      return;
     }
 
-    setDeferredPrompt(null);
-    setShowButton(false);
+    try {
+      // Trigger the native popup
+      await promptToUse.prompt();
+      const result = await promptToUse.userChoice;
+      
+      if (result.outcome === "accepted") {
+        console.log("User successfully installed the app");
+        // Clear out the prompts so it doesn't trigger again
+        setDeferredPrompt(null);
+        if (typeof window !== 'undefined') window.deferredPwaPrompt = undefined;
+      }
+    } catch (err) {
+      console.error("Install prompt error:", err);
+      alert("Please use the install button located in your browser's address bar.");
+    }
   };
 
-  if (!showButton) return null;
-
-  // makes the style of the button and when user clicks on it, it fires the prompt to install the app
   return (
-    <section
-      aria-label="Install the app"
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        width: "100%",
-        margin: "0.25rem auto 0.75rem",
-      }}
+    <button
+      onClick={handleInstall}
+      className="flex-1 bg-emerald-600 text-white font-black uppercase tracking-widest text-xs py-5 rounded-2xl hover:bg-emerald-500 transition-all shadow-xl shadow-emerald-600/20 flex items-center justify-center gap-3 group"
+      style={{ backgroundImage: "linear-gradient(180deg, #10b981 0%, #059669 100%)" }}
     >
-      <button
-        onClick={handleInstall}
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          width: "auto",
-          padding: "0.7rem 1rem",
-          backgroundColor: "#2e7d32",
-          backgroundImage: "linear-gradient(180deg, #418f46 0%, #2e7d32 100%)",
-          color: "white",
-          border: "1px solid rgba(46, 125, 50, 0.35)",
-          borderRadius: "999px",
-          cursor: "pointer",
-          fontWeight: 600,
-          fontSize: "0.92rem",
-          boxShadow: "0 4px 10px rgba(46, 125, 50, 0.14)",
-          transition: "transform 0.15s ease, box-shadow 0.15s ease",
-        }}
-        onMouseEnter={(event) => {
-          event.currentTarget.style.transform = "translateY(-1px)";
-          event.currentTarget.style.boxShadow =
-            "0 6px 14px rgba(46, 125, 50, 0.2)";
-        }}
-        onMouseLeave={(event) => {
-          event.currentTarget.style.transform = "translateY(0)";
-          event.currentTarget.style.boxShadow =
-            "0 4px 10px rgba(46, 125, 50, 0.14)";
-        }}
-      >
-        Install the app
-      </button>
-    </section>
+      <Download size={16} className="group-hover:scale-110 transition-transform" />
+      Install App
+    </button>
   );
 }

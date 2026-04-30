@@ -43,13 +43,19 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              // the browser checks if service workers are supported and registers the service worker for offline capabilities
+              // 1. GLOBAL PWA CATCHER: Steal the install prompt the exact millisecond it fires
+              window.addEventListener('beforeinstallprompt', function(e) {
+                e.preventDefault();
+                window.deferredPwaPrompt = e;
+              });
+
+              // 2. SERVICE WORKER: Register for offline capabilities
               if ('serviceWorker' in navigator) {
-              window.addEventListener('load', function() {
-              navigator.serviceWorker.register('/sw.js');
-            });
-          }
-          `,
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js');
+                });
+              }
+            `,
           }}
         />
       </body>
