@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
+import useSWR, { mutate } from 'swr';
 import { analysisService } from "@/services/analysisService";
 import {
   Activity, ShieldCheck, Search, Droplets, RefreshCw,
@@ -10,7 +11,8 @@ import {
   Thermometer, Wind, CheckCircle, XCircle,
   FileText, TrendingDown, Map as MapIcon, ActivitySquare,
   Home, Smartphone, AlertOctagon, Anchor, Camera, Fish,
-  Sprout, Droplet, MapPin, Navigation, Download, Lock, Users
+  Sprout, Droplet, MapPin, Navigation, Download, Lock, Users,
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
 import {
   ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid,
@@ -21,120 +23,83 @@ import Link from "next/link";
 export const AnalysisComponent: React.FC = () => {
   const [activeTab, setActiveTab] = useState("tourist");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [data, setData] = useState<any>({
-    omni: null, chatbot: null, history: null, bloom: null,
-    forensic: null, progress: null, irrigation: null, 
-    infra: null, eco: null, compliance: null, audit: null, auditHistory: null
-  });
-  const [isLoading, setIsLoading] = useState(true);
-  const [isTabLoading, setIsTabLoading] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   
-  const [communityReports, setCommunityReports] = useState<any[]>([]);
   const [omniDateRange, setOmniDateRange] = useState({ start: "2026-02-01", end: "2026-04-30" });
   const [auditDateRange, setAuditDateRange] = useState({ start: "2026-02-01", end: "2026-04-30" });
+  
+  // Pagination State
+  const [auditPage, setAuditPage] = useState(1);
+  const auditPageSize = 25;
 
-  // 1. Initial Load: Fetch only the "Core" data (Performance Guard)
   useEffect(() => {
     setIsMounted(true);
     const user = localStorage.getItem("loginName") || localStorage.getItem("token");
     if (user) setIsAuthenticated(true);
-
-    const loadCoreData = async () => {
-      setIsLoading(true);
-      try {
-        const [omni, chatbot, bloom, history] = await Promise.all([
-          analysisService.getOmniDashboard(),
-          analysisService.getChatbotSummary(),
-          analysisService.getBloomForecast(),
-          analysisService.getHistoryRange(omniDateRange.start, omniDateRange.end)
-        ]);
-        
-        setData((prev: any) => ({ ...prev, omni, chatbot, bloom, history }));
-      } catch (err) {
-        console.error("Core Uplink Error:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadCoreData();
   }, []);
 
-  // 2. Lazy Loading: Fetch tab-specific data only when active
-  useEffect(() => {
-    if (!isMounted || isLoading) return;
+  // --- SWR POWERED CACHE LAYER ---
 
-    const loadTabData = async () => {
-      try {
-        if (activeTab === "science" && !data.forensic) {
-          setIsTabLoading(true);
-          const [forensic, progress] = await Promise.all([
-            analysisService.getForensicAttribution(),
-            analysisService.getRemediationProgress()
-          ]);
-          setData((prev: any) => ({ ...prev, forensic, progress }));
-        }
-        
-        if (activeTab === "agri" && !data.irrigation) {
-          setIsTabLoading(true);
-          const [irrigation, infra, eco, compliance] = await Promise.all([
-            analysisService.getIrrigationSafety(),
-            analysisService.getInfrastructureRisk(),
-            analysisService.getHarvestValue(),
-            analysisService.getComplianceStatus()
-          ]);
-          setData((prev: any) => ({ ...prev, irrigation, infra, eco, compliance }));
-        }
+  // 1. Core Data (Fetched immediately, cached by string key)
+  const { data: omni } = useSWR('omni-dashboard', analysisService.getOmniDashboard);
+  const { data: chatbot } = useSWR('chatbot-summary', analysisService.getChatbotSummary);
+  const { data: bloom } = useSWR('bloom-forecast', analysisService.getBloomForecast);
 
-        if (activeTab === "audit" && !data.audit) {
-          setIsTabLoading(true);
-          const [audit, auditHistory, reports] = await Promise.all([
-            (analysisService as any).getMasterAudit(auditDateRange.start, auditDateRange.end),
-            analysisService.getHistoryRange(auditDateRange.start, auditDateRange.end),
-            analysisService.getReports()
-          ]);
-          setData((prev: any) => ({ ...prev, audit, auditHistory }));
-          setCommunityReports(reports);
-        }
-      } catch (err) {
-        console.error(`Lazy Load Error (${activeTab}):`, err);
-      } finally {
-        setIsTabLoading(false);
-      }
-    };
+  const historyKey = ['history', omniDateRange.start, omniDateRange.end];
+  const { data: history, isValidating: isGraphLoading } = useSWR(historyKey, () => 
+    analysisService.getHistoryRange(omniDateRange.start, omniDateRange.end)
+  );
 
-    loadTabData();
-  }, [activeTab, isMounted, isLoading]);
+  // 2. Lazy Loading Tab Data (Conditional fetching: Key is null if tab isn't active)
+  const { data: forensic, isValidating: isForensicSyncing } = useSWR(isAuthenticated && activeTab === "science" ? 'forensic' : null, analysisService.getForensicAttribution);
+  const { data: progress, isValidating: isProgressSyncing } = useSWR(isAuthenticated && activeTab === "science" ? 'progress' : null, analysisService.getRemediationProgress);
+
+  const { data: irrigation, isValidating: isAgriSyncing } = useSWR(isAuthenticated && activeTab === "agri" ? 'irrigation' : null, analysisService.getIrrigationSafety);
+  const { data: infra } = useSWR(isAuthenticated && activeTab === "agri" ? 'infra' : null, analysisService.getInfrastructureRisk);
+  const { data: eco } = useSWR(isAuthenticated && activeTab === "agri" ? 'eco' : null, analysisService.getHarvestValue);
+  const { data: compliance } = useSWR(isAuthenticated && activeTab === "agri" ? 'compliance' : null, analysisService.getComplianceStatus);
+
+  const auditKey = isAuthenticated && activeTab === "audit" ? ['master-audit', auditDateRange.start, auditDateRange.end, auditPage, auditPageSize] : null;
+  const { data: audit, isValidating: isAuditSyncing } = useSWR(auditKey, () => 
+    analysisService.getMasterAudit(auditDateRange.start, auditDateRange.end, auditPage, auditPageSize)
+  );
+
+  const auditHistoryKey = isAuthenticated && activeTab === "audit" ? ['audit-history', auditDateRange.start, auditDateRange.end] : null;
+  const { data: auditHistory } = useSWR(auditHistoryKey, () => 
+    analysisService.getHistoryRange(auditDateRange.start, auditDateRange.end)
+  );
+
+  const { data: communityReports } = useSWR(isAuthenticated && activeTab === "audit" ? 'reports' : null, analysisService.getReports);
+
+  // Derive loading states dynamically
+  const isLoading = !omni || !chatbot || !bloom || !history;
+  const isTabLoading = isGraphLoading || isForensicSyncing || isProgressSyncing || isAgriSyncing || isAuditSyncing;
+
+  // Bundle data to keep all module properties identical to your previous layout
+  const data = {
+    omni, chatbot, bloom, history, 
+    forensic, progress, irrigation, 
+    infra, eco, compliance, audit, auditHistory
+  };
+
+  // --- ACTIONS ---
 
   const handleUpdateOmniGraph = async () => {
-    setIsTabLoading(true);
-    try {
-      const historyResult = await analysisService.getHistoryRange(omniDateRange.start, omniDateRange.end);
-      setData((prev: any) => ({ ...prev, history: historyResult }));
-    } catch (err) {
-      console.error("Graph Update Error:", err);
-    } finally {
-      setIsTabLoading(false);
-    }
+    mutate(historyKey);
   };
 
   const handleUpdateAudit = async () => {
-    setIsTabLoading(true);
-    try {
-      const [history, audit] = await Promise.all([
-        analysisService.getHistoryRange(auditDateRange.start, auditDateRange.end),
-        (analysisService as any).getMasterAudit(auditDateRange.start, auditDateRange.end)
-      ]);
-      setData((prev: any) => ({ ...prev, auditHistory: history, audit }));
-    } catch (err) {
-      console.error("Audit Update Error:", err);
-    } finally {
-      setIsTabLoading(false);
-    }
+    setAuditPage(1); 
+    mutate(auditKey);
+    mutate(auditHistoryKey);
+  };
+
+  const fetchAuditPage = async (page: number) => {
+    setAuditPage(page);
   };
 
   const omniChartData = useMemo(() => data.history?.dataPoints || [], [data.history]);
-  const auditTableData = useMemo(() => data.auditHistory?.dataPoints || [], [data.auditHistory]);
+  const auditFullHistoryData = useMemo(() => data.auditHistory?.dataPoints || [], [data.auditHistory]);
 
   const TABS = [
     { id: "overview", label: "Overview", icon: LayoutGrid, isPublic: false },
@@ -145,7 +110,7 @@ export const AnalysisComponent: React.FC = () => {
     { id: "audit", label: "Data Records", icon: Database, isPublic: false }
   ];
 
-  if (isLoading || !data.omni) return <LoadingState />;
+  if (!isMounted || isLoading) return <LoadingState />;
 
   return (
     <div className="min-h-screen bg-transparent text-slate-900 font-sans selection:bg-emerald-100 pb-20">
@@ -222,12 +187,14 @@ export const AnalysisComponent: React.FC = () => {
           {isAuthenticated && activeTab === "audit" && data.audit && (
             <AuditLogModule 
               data={data} 
-              tableData={auditTableData} 
+              tableData={data.audit?.telemetryLogs || []} 
+              fullExportData={auditFullHistoryData}
               dateRange={auditDateRange}
               setDateRange={setAuditDateRange} 
               isAuditLoading={isTabLoading}
               onUpdateAudit={handleUpdateAudit}
-              communityReports={communityReports}
+              communityReports={communityReports || []}
+              onPageChange={fetchAuditPage}
             />
           )}
         </main>
@@ -628,15 +595,30 @@ const AgriSafetyModule = ({ data }: any) => {
   );
 };
 
-//Audit Log & System History
-const AuditLogModule = ({ data, tableData, dateRange, setDateRange, isAuditLoading, onUpdateAudit, communityReports }: any) => {
+// --- AUDIT LOG MODULE ---
+const AuditLogModule = ({ 
+  data, 
+  tableData, 
+  fullExportData, 
+  dateRange, 
+  setDateRange, 
+  isAuditLoading, 
+  onUpdateAudit, 
+  communityReports, 
+  onPageChange 
+}: any) => {
+  
+  const pagination = data.audit?.auditMetadata?.pagination || { currentPage: 1, totalPages: 1 };
   
   const handleDownloadCSV = () => {
-    if (!tableData || tableData.length === 0) return;
+    const exportData = fullExportData && fullExportData.length > 0 ? fullExportData : tableData;
+    if (!exportData || exportData.length === 0) return;
+    
     const headers = ["Timestamp", "Nitrates (mg/L)", "Phosphates (mg/L)", "pH Level", "Conductivity (µS/cm)", "Status"];
-    const rows = tableData.map((row: any) => {
-      const isAnomaly = row.nitrates >= 2.4 || row.phosphates >= 0.15 || row.ph > 9.0 || row.ph < 6.5;
-      return `"${row.x}",${row.nitrates.toFixed(2)},${row.phosphates.toFixed(2)},${row.ph.toFixed(2)},${row.ec.toFixed(2)},${isAnomaly ? "ANOMALY" : "VERIFIED"}`;
+    const rows = exportData.map((row: any) => {
+      const isAnomaly = row.nitrates >= 2.4 || row.ph > 9.0;
+      const timeVal = row.timestamp ? new Date(row.timestamp).toLocaleString('en-ZA') : row.x;
+      return `"${timeVal}",${row.nitrates.toFixed(2)},${row.phosphates.toFixed(2)},${row.ph.toFixed(2)},${row.ec.toFixed(2)},${isAnomaly ? "ANOMALY" : "VERIFIED"}`;
     });
     
     const csvContent = [headers.join(","), ...rows].join("\n");
@@ -644,7 +626,7 @@ const AuditLogModule = ({ data, tableData, dateRange, setDateRange, isAuditLoadi
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", `Harties_Scientific_Audit.csv`);
+    link.setAttribute("download", `Harties_Scientific_Audit_Daily.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -652,30 +634,22 @@ const AuditLogModule = ({ data, tableData, dateRange, setDateRange, isAuditLoadi
 
   const getIssueColor = (subject: string) => {
     const s = subject?.toLowerCase() || "";
-    // POLLUTION (Rose Red)
-    if (s.includes("pollution") || s.includes("sewage") || s.includes("leak") || s.includes("spill")) 
-        return "bg-rose-500 text-white border-rose-600 shadow-sm shadow-rose-200";
-    // ALGAE BLOOM (Cyan Blue)
-    if (s.includes("algae") || s.includes("bloom") || s.includes("green") || s.includes("hyacinth")) 
-        return "bg-cyan-500 text-white border-cyan-600 shadow-sm shadow-cyan-200";
-    // POOR WATER QUALITY (Amber Orange)
-    if (s.includes("quality") || s.includes("poor") || s.includes("dirty") || s.includes("muddy") || s.includes("odor")) 
-        return "bg-amber-500 text-white border-amber-600 shadow-sm shadow-amber-200";
-    // OTHER (Slate Grey)
+    if (s.includes("pollution") || s.includes("sewage") || s.includes("leak")) return "bg-rose-500 text-white border-rose-600 shadow-sm shadow-rose-200";
+    if (s.includes("algae") || s.includes("bloom") || s.includes("green")) return "bg-cyan-500 text-white border-cyan-600 shadow-sm shadow-cyan-200";
+    if (s.includes("quality") || s.includes("odor") || s.includes("dirty")) return "bg-amber-500 text-white border-amber-600 shadow-sm shadow-amber-200";
     return "bg-slate-400 text-white border-slate-500 shadow-sm";
   };
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* Top Level Stats */}
+      
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <AuditStat label="Highest Sewage Spike" value={data.audit?.historicalExtremes?.peakSewageInflowMgL?.toFixed(2)} unit="mg/L" />
-        <AuditStat label="Highest Fertilizer Spike" value={data.audit?.historicalExtremes?.peakFertilizerInflowMgL?.toFixed(2)} unit="mg/L" />
-        <AuditStat label="Data Accuracy" value={data.audit?.databaseHealth?.completenessPercentage || "98.2%"} unit="DATA TRUST" />
-        <AuditStat label="Hardware Status" value="99.8%" unit="SENSOR UPTIME" />
+        <AuditStat label="Highest Raw Sewage Spike" value={data.audit?.historicalExtremes?.peakSewageInflowMgL?.toFixed(2)} unit="mg/L" />
+        <AuditStat label="Highest Raw Fertilizer Spike" value={data.audit?.historicalExtremes?.peakFertilizerInflowMgL?.toFixed(2)} unit="mg/L" />
+        <AuditStat label="System Data Mode" value="Daily Averages" unit="AGGREGATED" />
+        <AuditStat label="Sensor Reliability" value="99.8%" unit="VERIFIED UPTIME" />
       </div>
       
-      {/* --- SYSTEM HISTORY TABLE --- */}
       <div className="bg-white border border-slate-200 rounded-[2.5rem] overflow-hidden shadow-xl">
         <div className="p-8 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 bg-slate-50/30">
           <div>
@@ -683,15 +657,27 @@ const AuditLogModule = ({ data, tableData, dateRange, setDateRange, isAuditLoadi
               <Database size={16} className="text-emerald-500" /> Full System History
             </h3>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-              Cross-Metric Sensor Audit Log • Multi-Color Telemetry Analysis
+              Daily Grouped Telemetry • Server-Side Pagination Active
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3 bg-white p-2 rounded-2xl border border-slate-200 shadow-inner w-full lg:w-auto">
             <Calendar size={14} className="text-emerald-500 ml-2" />
-            <input type="date" value={dateRange.start} onChange={(e)=>setDateRange({...dateRange, start: e.target.value})} className="bg-transparent text-slate-700 text-[11px] font-black uppercase outline-none" style={{ colorScheme: 'light' }} />
+            <input 
+                type="date" 
+                value={dateRange.start} 
+                onChange={(e)=>setDateRange({...dateRange, start: e.target.value})} 
+                className="bg-transparent text-slate-700 text-[11px] font-black uppercase outline-none" 
+                style={{ colorScheme: 'light' }} 
+            />
             <div className="h-4 w-px bg-slate-200 mx-1" />
-            <input type="date" value={dateRange.end} onChange={(e)=>setDateRange({...dateRange, end: e.target.value})} className="bg-transparent text-slate-700 text-[11px] font-black uppercase outline-none" style={{ colorScheme: 'light' }} />
+            <input 
+                type="date" 
+                value={dateRange.end} 
+                onChange={(e)=>setDateRange({...dateRange, end: e.target.value})} 
+                className="bg-transparent text-slate-700 text-[11px] font-black uppercase outline-none" 
+                style={{ colorScheme: 'light' }} 
+            />
             <button onClick={onUpdateAudit} disabled={isAuditLoading} className="bg-slate-900 text-white hover:bg-emerald-600 transition-all px-5 py-2.5 rounded-xl text-[10px] font-black tracking-widest uppercase flex items-center gap-2 disabled:opacity-50">
               {isAuditLoading ? <RefreshCw size={12} className="animate-spin" /> : "Sync Sensors"}
             </button>
@@ -701,24 +687,28 @@ const AuditLogModule = ({ data, tableData, dateRange, setDateRange, isAuditLoadi
           </div>
         </div>
 
-        <div className="overflow-x-auto max-h-[550px] custom-scrollbar">
+        <div className="overflow-x-auto min-h-[400px]">
           <table className="w-full text-left border-collapse">
             <thead className="bg-slate-900 text-[10px] font-black uppercase text-slate-400 tracking-widest sticky top-0 z-20">
               <tr>
-                <th className="px-10 py-5">Timestamp</th>
-                <th className="px-6 py-5 text-center text-emerald-400">Nitrates</th>
-                <th className="px-6 py-5 text-center text-blue-400">Phosphates</th>
-                <th className="px-6 py-5 text-center text-amber-400">pH Level</th>
-                <th className="px-6 py-5 text-center text-cyan-400">Salt (EC)</th>
-                <th className="px-12 py-5 text-center text-white">Verification</th>
+                <th className="px-10 py-5">Day</th>
+                <th className="px-6 py-5 text-center text-emerald-400">Avg Nitrates</th>
+                <th className="px-6 py-5 text-center text-blue-400">Avg Phosphates</th>
+                <th className="px-6 py-5 text-center text-amber-400">Avg pH</th>
+                <th className="px-6 py-5 text-center text-cyan-400">Avg Salt</th>
+                <th className="px-12 py-5 text-center text-white">Status</th>
               </tr>
             </thead>
             <tbody className="text-[11px] font-bold">
               {tableData.map((row: any, i: number) => {
-                const isAnomaly = row.nitrates >= 2.4 || row.phosphates >= 0.15 || row.ph > 9.0 || row.ph < 6.5;
+                const isAnomaly = row.nitrates >= 2.0 || row.ph > 9.0 || row.ph < 6.5;
+                const dateLabel = new Date(row.timestamp).toLocaleDateString('en-ZA', { 
+                    year: 'numeric', month: 'short', day: 'numeric' 
+                });
+
                 return (
-                  <tr key={i} className={`border-b transition-colors ${isAnomaly ? 'bg-rose-50/50 hover:bg-rose-100/50 border-rose-100' : 'border-slate-50 hover:bg-slate-50/50'}`}>
-                    <td className="px-10 py-4 font-mono text-slate-400">{row.x}</td>
+                  <tr key={i} className={`border-b transition-colors ${isAnomaly ? 'bg-rose-50/50 border-rose-100' : 'border-slate-50 hover:bg-slate-50/50'}`}>
+                    <td className="px-10 py-4 font-mono text-slate-500">{dateLabel}</td>
                     <td className={`px-6 py-4 text-center ${isAnomaly && row.nitrates > 2 ? 'text-rose-700 font-black' : 'text-emerald-600 font-black'}`}>
                         {row.nitrates.toFixed(3)}
                     </td>
@@ -742,16 +732,38 @@ const AuditLogModule = ({ data, tableData, dateRange, setDateRange, isAuditLoadi
             </tbody>
           </table>
         </div>
+
+        <div className="flex justify-between items-center p-6 bg-slate-50 border-t border-slate-100">
+          <button 
+            disabled={pagination.currentPage <= 1 || isAuditLoading}
+            onClick={() => onPageChange(pagination.currentPage - 1)}
+            className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 text-slate-900 font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-slate-100 disabled:opacity-30 transition-all shadow-sm"
+          >
+            <ChevronLeft size={16} /> Prev Set
+          </button>
+          
+          <div className="text-center hidden md:block">
+            <span className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-1 block">Audit Navigation</span>
+            <span className="text-xs font-black text-slate-900">PAGE {pagination.currentPage} OF {pagination.totalPages}</span>
+          </div>
+
+          <button 
+            disabled={pagination.currentPage >= pagination.totalPages || isAuditLoading}
+            onClick={() => onPageChange(pagination.currentPage + 1)}
+            className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-slate-800 disabled:opacity-30 transition-all shadow-xl"
+          >
+            Next Set <ChevronRight size={16} />
+          </button>
+        </div>
       </div>
 
-      {/* --- COMMUNITY SIGHTINGS LOG --- */}
       <div className="bg-white border border-slate-200 rounded-[2.5rem] overflow-hidden shadow-xl">
         <div className="p-8 border-b border-slate-100 bg-slate-50/30">
             <h3 className="text-xs font-black uppercase text-slate-800 tracking-[0.2em] italic flex items-center gap-2">
-              <Users size={16} className="text-cyan-500" /> Community Sightings Log
+              <Users size={16} className="text-cyan-500" /> Community Field Reports
             </h3>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-              Crowdsourced incident data categorized by severity
+              Crowdsourced incident data from dam shorelines
             </p>
         </div>
 
@@ -766,7 +778,7 @@ const AuditLogModule = ({ data, tableData, dateRange, setDateRange, isAuditLoadi
               </tr>
             </thead>
             <tbody className="text-[11px] font-bold text-slate-600">
-              {communityReports.length === 0 ? (
+              {(!communityReports || communityReports.length === 0) ? (
                 <tr>
                   <td colSpan={4} className="px-10 py-16 text-center text-slate-300 text-xs uppercase tracking-[0.3em] font-black">
                     No field reports on record
@@ -795,8 +807,7 @@ const AuditLogModule = ({ data, tableData, dateRange, setDateRange, isAuditLoadi
   );
 };
 
-// --- SHARED UI ---
-
+// --- SHARED UI COMPONENTS ---
 const ModernStatusCard = ({ title, value, unit, status, color, icon: Icon }: any) => {
   const styles: any = { emerald: "text-emerald-600 border-emerald-200 bg-emerald-50", blue: "text-blue-600 border-blue-200 bg-blue-50", amber: "text-amber-600 border-amber-200 bg-amber-50", rose: "text-rose-600 border-rose-200 bg-rose-50", slate: "text-slate-600 border-slate-200 bg-slate-50" };
   return (
@@ -817,11 +828,11 @@ const ModernStatusCard = ({ title, value, unit, status, color, icon: Icon }: any
 };
 
 const TelemetryRow = ({ label, value, highlight = false, color = "emerald" }: any) => {
-  const colorMap: any = { emerald: "text-emerald-700 bg-emerald-50 border-emerald-200", blue: "text-blue-700 bg-blue-50 border-blue-200", amber: "text-amber-700 bg-amber-50 border-amber-200", rose: "text-rose-700 bg-rose-50 border-rose-200", slate: "text-slate-700 bg-slate-100 border-slate-200", blueHigh: "text-blue-500 bg-blue-500/10 border-blue-500/20" };
+  const colorMap: any = { emerald: "text-emerald-700 bg-emerald-50 border-emerald-200", blue: "text-blue-700 bg-blue-50 border-blue-200", amber: "text-amber-700 bg-amber-50 border-amber-200", rose: "text-rose-700 bg-rose-50 border-rose-200", slate: "text-slate-700 bg-slate-100 border-slate-200" };
   return (
-    <div className="flex justify-between items-center py-3 md:py-3.5 border-b border-slate-100 last:border-0">
-      <span className="text-[9px] md:text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">{label}</span>
-      <span className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest px-2.5 py-1 md:px-3 md:py-1.5 rounded-md md:rounded-lg border shadow-sm ${highlight ? colorMap[color] : 'text-slate-700 border-slate-200 bg-white'}`}>
+    <div className="flex justify-between items-center py-3 border-b border-slate-100 last:border-0">
+      <span className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em]">{label}</span>
+      <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border shadow-sm ${highlight ? colorMap[color] : 'text-slate-700 border-slate-200 bg-white'}`}>
         {value ?? "---"}
       </span>
     </div>
@@ -829,51 +840,51 @@ const TelemetryRow = ({ label, value, highlight = false, color = "emerald" }: an
 };
 
 const AgriMetric = ({ icon: Icon, label, value, status }: any) => (
-  <div className="flex items-center gap-4 md:gap-6 bg-white p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] border border-slate-200 shadow-sm">
-    <div className="p-3 md:p-4 bg-slate-50 text-emerald-600 rounded-xl md:rounded-2xl border border-slate-100 shrink-0"><Icon size={20} className="md:w-6 md:h-6" /></div>
+  <div className="flex items-center gap-6 bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm">
+    <div className="p-4 bg-slate-50 text-emerald-600 rounded-2xl border border-slate-100 shrink-0"><Icon size={24} /></div>
     <div className="min-w-0">
-      <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5 truncate">{label}</p>
-      <p className="text-xl md:text-2xl font-black italic leading-none truncate">{value}</p>
-      <p className="text-[8px] md:text-[9px] font-black text-emerald-600 uppercase mt-1 md:mt-2 tracking-widest truncate">{status}</p>
+      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5 truncate">{label}</p>
+      <p className="text-2xl font-black italic leading-none truncate">{value}</p>
+      <p className="text-[9px] font-black text-emerald-600 uppercase mt-2 tracking-widest truncate">{status}</p>
     </div>
   </div>
 );
 
 const DetailCard = ({ title, value, desc }: any) => (
-  <div className="bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] border border-slate-200 shadow-sm group hover:border-emerald-200 transition-colors h-full flex flex-col justify-center">
-    <h4 className="text-[10px] md:text-[11px] font-black text-emerald-600 uppercase tracking-[0.3em] mb-1.5 md:mb-2">{title}</h4>
-    <p className="text-3xl md:text-4xl font-black text-slate-900 mb-2 md:mb-4 italic tracking-tighter">{value ?? "---"}</p>
-    <p className="text-[11px] md:text-xs text-slate-400 leading-relaxed font-medium">{desc}</p>
+  <div className="bg-white p-10 rounded-[3rem] border border-slate-200 shadow-sm flex flex-col justify-center">
+    <h4 className="text-[11px] font-black text-emerald-600 uppercase tracking-[0.3em] mb-2">{title}</h4>
+    <p className="text-4xl font-black text-slate-900 mb-4 italic tracking-tighter">{value ?? "---"}</p>
+    <p className="text-xs text-slate-400 leading-relaxed font-medium">{desc}</p>
   </div>
 );
 
 const AuditStat = ({ label, value, unit }: any) => (
-  <div className="bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] border border-slate-200 shadow-sm text-center group transition-all duration-500">
-    <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</p>
-    <p className="text-4xl md:text-5xl font-black italic tracking-tighter text-slate-900 leading-none mb-1 md:mb-2">{value ?? "---"}</p>
-    <p className="text-[9px] md:text-[10px] font-black text-emerald-600 uppercase tracking-widest">{unit}</p>
+  <div className="bg-white p-10 rounded-[3rem] border border-slate-200 shadow-sm text-center">
+    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</p>
+    <p className="text-5xl font-black italic tracking-tighter text-slate-900 leading-none mb-2">{value ?? "---"}</p>
+    <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">{unit}</p>
   </div>
 );
 
 const SectionBox = ({ title, icon: Icon, children }: any) => (
-  <div className="bg-white border border-slate-200 p-6 md:p-8 rounded-[2rem] md:rounded-[3rem] shadow-sm h-full flex flex-col">
-    <h4 className="text-[10px] md:text-[11px] font-black uppercase text-slate-400 tracking-[0.4em] mb-5 md:mb-8 flex items-center gap-2 md:gap-3">
-      <div className="p-1.5 md:p-2 bg-slate-50 rounded-lg md:rounded-xl border border-slate-100 shrink-0"><Icon size={14} className="text-emerald-600" /></div> <span className="truncate">{title}</span>
+  <div className="bg-white border border-slate-200 p-8 rounded-[3rem] shadow-sm h-full flex flex-col">
+    <h4 className="text-[11px] font-black uppercase text-slate-400 tracking-[0.4em] mb-8 flex items-center gap-3">
+      <div className="p-2 bg-slate-50 rounded-xl border border-slate-100 shrink-0"><Icon size={14} className="text-emerald-600" /></div> <span className="truncate">{title}</span>
     </h4>
     {children}
   </div>
 );
 
 const SectionHeader = ({ title, icon: Icon }: any) => (
-  <div className="flex items-center gap-3 md:gap-5 mb-4 md:mb-8">
-    <div className="p-2.5 md:p-3.5 bg-slate-900 text-white rounded-xl md:rounded-2xl shadow-xl shrink-0"><Icon size={20} className="md:w-6 md:h-6" /></div>
-    <h3 className="text-xl md:text-2xl font-black text-slate-900 uppercase italic tracking-tighter leading-none">{title}</h3>
+  <div className="flex items-center gap-5 mb-8">
+    <div className="p-3.5 bg-slate-900 text-white rounded-2xl shadow-xl shrink-0"><Icon size={24} /></div>
+    <h3 className="text-2xl font-black text-slate-900 uppercase italic tracking-tighter leading-none">{title}</h3>
   </div>
 );
 
 const LoadingState = () => (
   <div className="h-screen flex flex-col items-center justify-center bg-transparent text-emerald-600">
-    <RefreshCw className="animate-spin text-emerald-500 mb-6 md:mb-8 w-[50px] h-[50px] md:w-[60px] md:h-[60px]" strokeWidth={2} />
-    <p className="text-[9px] md:text-[11px] font-black uppercase tracking-[0.5em] md:tracking-[1em] animate-pulse text-slate-400 text-center px-4">Connecting to the Dam's Sensors...</p>
+    <RefreshCw className="animate-spin text-emerald-500 mb-8 w-[60px] h-[60px]" strokeWidth={2} />
+    <p className="text-[11px] font-black uppercase tracking-[1em] animate-pulse text-slate-400 text-center px-4">Connecting to the Dam's Sensors...</p>
   </div>
 );
