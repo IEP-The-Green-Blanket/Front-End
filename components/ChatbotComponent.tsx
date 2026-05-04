@@ -114,7 +114,7 @@ export default function ChatbotComponent() {
           {isTyping && (
             <div className="flex items-center gap-2 justify-start">
               <div className="px-4 py-2.5 rounded-2xl rounded-bl-sm bg-slate-100 text-slate-500 text-[10px] font-black uppercase tracking-[0.1em] border border-slate-200">
-                Analyzing Telemetry...
+                Analyzing question...
               </div>
             </div>
           )}
@@ -128,7 +128,7 @@ export default function ChatbotComponent() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-            placeholder="Query Intelligence..."
+            placeholder="Please ask me a question..."
             className="flex-1 bg-transparent border-none outline-none text-sm font-bold text-slate-900 px-3 placeholder:text-slate-400 placeholder:font-medium w-full"
           />
 
